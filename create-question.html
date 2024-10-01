@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+    <head>
+        <title>Create A Question</title>
+    </head>
+    <body>
+        <div id="navbar">
+            <button id="home-btn" onclick="window.location.href='main'">Home</button>
+            <button id="logout-btn" onclick="window.location.href='logout'">Logout</button>
+        </div>
+        <div id="create-question-form">
+            <form action="post" action="upload-question" id="create-question" enctype="multipart/form-data">
+                <label for="category">Category: </label>
+                <select id="category" name="category" required></select>
+                <label for="question">Question: </label>
+                <input type="text" id="question" name="questions" maxlength="256" required>
+                <label for="correct-answer">Correct Answer: </label>
+                <input type="text" id="correct-answer" name="correct-answer" maxlength="256" required>
+                <lable for="wrong-answer-1">Wrong Answer 1: </lable>
+                <input type="text" id="wrong-answer-1" name="wrong-answer-1" maxlength="256" required>
+                <lable for="wrong-answer-2">Wrong Answer 2: </lable>
+                <input type="text" id="wrong-answer-2" name="wrong-answer-2" maxlength="256" required>
+                <lable for="wrong-answer-3">Wrong Answer 3: </lable>
+                <input type="text" id="wrong-answer-3" name="wrong-answer-3" maxlength="256" required>
+                <input type="file" id='file' name='file-name'>
+                <button type="submit">Create</button>
+            </form>
+        </div>
+    </body>
+    <script src="scripts/create-question.js"></script>
+</html>
