@@ -7,35 +7,6 @@ import java.util.*;
 import org.json.*;
 
 public class QuizServlet extends DbConnectionServlet {
-    private String getMediaHTML(String fileName) {
-        String[] imageTypes = { "apng", "png", "avif", "gif", "jpg", "jpeg", "jfif", "pjpeg", "pjp", "svg", "webp" };
-        List<String> imagelist = Arrays.asList(imageTypes);
-
-        String[] videoTypes = { "mp4", "webm", "ogg", "mov" };
-        List<String> videoList = Arrays.asList(videoTypes);
-
-        String[] temp = fileName.split("[.]");
-        String fileType = temp[temp.length - 1].toLowerCase();
-
-        String mediaHTML = "";
-        // fixed media container size
-        if (imagelist.contains(fileType) || videoList.contains(fileType)) {
-            mediaHTML = "<div style='width: 400px; height: 300px; overflow: hidden; position: relative;'>";
-            if (imagelist.contains(fileType)) {
-                mediaHTML += "<img src='" + fileName + "' alt='question-content' "
-                        + "style='width: 100%; height: 100%; object-fit: cover; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);'>";
-            } else if (videoList.contains(fileType)) {
-                if (fileType.equals("mov"))
-                    fileType = "mp4";
-                mediaHTML += "<video controls autoplay loop "
-                        + "style='width: 100%; height: 100%; object-fit: cover; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);'>"
-                        + "<source src='" + fileName + "' type='video/" + fileType + "'></video>";
-            }
-            mediaHTML += "</div>";
-        }
-
-        return mediaHTML;
-    }
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -109,10 +80,11 @@ public class QuizServlet extends DbConnectionServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        System.out.println(session.getAttribute("questionID"));
-        String questionID = (String) session.getAttribute("questionID");
+        String questionID = request.getParameter("questionID");
         String answer = request.getParameter("answer");
         String correctAnswer = "";
+
+        JSONObject responseJSON = new JSONObject();
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -137,20 +109,9 @@ public class QuizServlet extends DbConnectionServlet {
             }
         }
 
-        Integer questionNumber = (Integer) session.getAttribute("questionNumber");
-
-        if (answer.equals(correctAnswer)) {
-            questionNumber++;
-            session.setAttribute("questionNumber", questionNumber);
-            response.sendRedirect("quiz");
-        } else {
-            response.setContentType("text/html");
-            PrintWriter out = response.getWriter();
-            out.println("<form method='get' action='quiz'><button type='submit'>Try Again</button></form>"
-                    + "<script type='text/javascript'>"
-                    + "alert('Incorrect!');"
-                    + "</script>");
-        }
-
+        responseJSON.put("correct_answer_given", answer.equals(correctAnswer));
+        responseJSON.put("correct_answer", correctAnswer);
+        response.setContentType("application/json");
+        response.getWriter().println(responseJSON);
     }
 }

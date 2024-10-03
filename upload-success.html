@@ -5,14 +5,11 @@
     <body>
         <h1>Your question/category has been uploaded successfully!</h1>
         <br>
-        <form method="get" action="upload-question">
-            <button type="submit">New Question</button>
-        </form>
-        <form method="get" action="upload-category">
-            <button type="submit">New Category</button>
-        </form>
-        <form method="get" action="main">
-            <button type="submit">Home</button>
-        </form>
+        <div id="nav-buttons">
+            <button id="new-question-btn" onclick="window.location.href='create-question.html'">New Question</button>
+            <br>
+            <button id="new-category-btn" onclick="window.location.href='upload-category'">New Category</button>
+            <br>
+            <button id="home-btn" onclick="window.location.href='main'">Home</button>
     </body>
 </html>
