@@ -3,11 +3,12 @@ import jakarta.servlet.http.*;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.Part;
+import jakarta.json.*;
 
 import java.sql.*;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.*;
+import netscape.javascript.JSException;
 
 @MultipartConfig
 public class QuestionUploadServlet extends DbConnectionServlet {
@@ -44,8 +45,8 @@ public class QuestionUploadServlet extends DbConnectionServlet {
 
         Connection con = null;
         ResultSet result = null;
-        String categorySelect = "";
         int numCategories = 0;
+        String jsonString = "{\"categories\":[";
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -62,9 +63,7 @@ public class QuestionUploadServlet extends DbConnectionServlet {
                 numCategories++;
                 String category = result.getString("name");
                 String categoryID = result.getString("id");
-                System.out.println(category);
-                System.out.println(categoryID);
-                categorySelect += "<option value='" + categoryID + "'>" + category + "</option>";
+                jsonString += "";
             }
             if (numCategories == 0)
                 response.sendRedirect("no-categories.html");
@@ -77,25 +76,9 @@ public class QuestionUploadServlet extends DbConnectionServlet {
                 System.out.println("");
             }
         }
+        response.setContentType("application/json");
 
-        response.setContentType("text/html");
-        PrintWriter out = response.getWriter();
-        out.println("<!DOCTYPE html>"
-                + "<head><title>Create A Quiz Question</title></head>"
-                + "<body><h1>Create A Quiz Question</h1><br>"
-                + "<a href='main'>Back to Main Page</a><br><br>"
-                + "<form method='POST' action='upload-question' enctype='multipart/form-data'>"
-                + "<label for='category'>Category</label><select id='category' name='category' required>"
-                + categorySelect + "</select><br>"
-                + "<label for='question'>Question:</label><input type='text' id='question' name='question' maxlength='256' required><br>"
-                + "<label for='correct-answer'>Correct Answer:</label><input type='text' id='correct-answer' name='correct-answer' maxlength='256' required><br>"
-                + "<label for='wrong-answer1'>Wrong Answer 1:</label><input type='text' id='wrong-answer1' name='wrong-answer1' maxlength='256' required><br>"
-                + "<label for='wrong-answer2'>Wrong Answer 2 (Optional):</label><input type='text' id='wrong-answer2' name='wrong-answer2' maxlength='256'><br>"
-                + "<label for='wrong-answer3'>Wrong Answer 3 (Optional):</label><input type='text' id='wrong-answer3' name='wrong-answer3' maxlength='256'><br>"
-                + "<input type='File' id='file' name='filename'><br>"
-                + "<input type='submit' value='Submit'>"
-                + "</form>"
-                + "</body></html>");
+
     }
 
     @Override
