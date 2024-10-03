@@ -3,7 +3,7 @@ import jakarta.servlet.http.*;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.Part;
-import jakarta.json.*;
+import org.json.*;
 
 import java.sql.*;
 import java.io.IOException;
@@ -11,7 +11,7 @@ import java.io.PrintWriter;
 import netscape.javascript.JSException;
 
 @MultipartConfig
-public class QuestionUploadServlet extends DbConnectionServlet {
+public class UploadQuestionServlet extends DbConnectionServlet {
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -26,8 +26,8 @@ public class QuestionUploadServlet extends DbConnectionServlet {
         String userType = null;
 
         try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-             PreparedStatement ps = con
-                     .prepareStatement("SELECT user_type FROM users WHERE username = ?")) {
+                PreparedStatement ps = con
+                        .prepareStatement("SELECT user_type FROM users WHERE username = ?")) {
             ps.setString(1, username);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -46,7 +46,10 @@ public class QuestionUploadServlet extends DbConnectionServlet {
         Connection con = null;
         ResultSet result = null;
         int numCategories = 0;
-        String jsonString = "{\"categories\":[";
+
+        // JSON 
+        JSONObject responseJSON = new JSONObject();
+        JSONArray categoriesJSON = new JSONArray();
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -63,10 +66,16 @@ public class QuestionUploadServlet extends DbConnectionServlet {
                 numCategories++;
                 String category = result.getString("name");
                 String categoryID = result.getString("id");
-                jsonString += "";
+
+                // Put each category into the JSON array
+                JSONObject currCategory = new JSONObject();
+                currCategory.put("id", categoryID);
+                currCategory.put("category", category);
+                categoriesJSON.put(currCategory);
             }
-            if (numCategories == 0)
+            if (numCategories == 0) {
                 response.sendRedirect("no-categories.html");
+            }
         } catch (SQLException ex) {
             while (ex != null) {
                 System.out.println("Message: " + ex.getMessage());
@@ -76,14 +85,16 @@ public class QuestionUploadServlet extends DbConnectionServlet {
                 System.out.println("");
             }
         }
+        // Return a JSON response
+        responseJSON.put("categories", categoriesJSON);
         response.setContentType("application/json");
-
-
+        response.getWriter().println(responseJSON);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         Part filePart = request.getPart("filename");
         String categoryID = request.getParameter("category");
         String question = request.getParameter("question");
@@ -93,8 +104,9 @@ public class QuestionUploadServlet extends DbConnectionServlet {
         String wrongAnswer3 = request.getParameter("wrong-answer3");
         String fileName = filePart.getSubmittedFileName();
         String filePath = "";
-        if (!fileName.trim().isEmpty())
+        if (!fileName.trim().isEmpty()) {
             filePath = System.getProperty("catalina.base") + "/webapps/comp3940-assignment1/media/" + fileName;
+        }
 
         Connection con = null;
         try {

@@ -3,6 +3,7 @@ import jakarta.servlet.*;
 import java.sql.*;
 import java.io.IOException;
 import java.io.PrintWriter;
+import org.json.*;
 
 public class DeleteQuestionServlet extends DbConnectionServlet {
 

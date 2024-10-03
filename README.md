@@ -22,7 +22,7 @@
 
 6. To setup your mysql tables, run the commands in `sqlcommands.sql`.
 
-7. Compile all '.java' files in the '/classes' directory using `javac -cp ".;path/to/tomcat/lib/servlet-api.jar;path/to/mysql-connector-j-x.x.x.jar;path/to/jbcrypt.jar" *.java`
+7. Compile all '.java' files in the '/classes' directory using `javac -cp ".;path/to/tomcat/lib/servlet-api.jar;path/to/mysql-connector-j-x.x.x.jar;path/to/jbcrypt.jar;path/to/json-20240303.jar" *.java`
 
 8. Open the `~/tomcat/bin directory` in **CMD** or **Terminal** and run the command: `startup.bat` for Windows and `sh startup.sh` for Mac.
 

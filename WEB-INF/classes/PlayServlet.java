@@ -65,7 +65,7 @@ public class PlayServlet extends DbConnectionServlet {
                             : "images/placeholder.jpg";
 
                     out.println("<div class='grid-item'>");
-                    out.println("<form action='quiz' method='GET'>");
+                    out.println("<form action='quiz.html?categoryID=" + categoryId + "'>");
                     out.println("<input type='hidden' name='category' value='" + categoryId + "'>");
                     out.println("<img src='" + imageSrc + "' alt='" + categoryName + "'>");
                     out.println("<button type='submit'>" + categoryName + "</button>");
