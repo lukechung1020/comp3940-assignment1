@@ -136,7 +136,7 @@ public class UploadQuestionServlet extends DbConnectionServlet {
             preparedStatement.close();
         } catch (SQLException ex) {
             while (ex != null) {
-                System.out.println("Uploading error!");
+                System.out.println("Uploading question error!");
                 System.out.println("Message: " + ex.getMessage());
                 System.out.println("SQLState: " + ex.getSQLState());
                 System.out.println("ErrorCode: " + ex.getErrorCode());

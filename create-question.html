@@ -8,6 +8,8 @@
             <button id="logout-btn" onclick="window.location.href='logout'">Logout</button>
         </div>
         <br>
+        <h1>Create A New Question</h1>
+        <br>
         <div id="create-question-form">
             <form action="upload-question" method="POST" id="create-question" enctype="multipart/form-data">
                 <label for="category">Category: </label>
@@ -22,13 +24,14 @@
                 <label for="wrong-answer-1">Wrong Answer 1: </label>
                 <input type="text" id="wrong-answer1" name="wrong-answer1" maxlength="256" required>
                 <br>
-                <label for="wrong-answer-2">Wrong Answer 2: </label>
+                <label for="wrong-answer-2">Wrong Answer 2 (Optional): </label>
                 <input type="text" id="wrong-answer2" name="wrong-answer2" maxlength="256">
                 <br>
-                <label for="wrong-answer-3">Wrong Answer 3: </label>
+                <label for="wrong-answer-3">Wrong Answer 3 (Optional): </label>
                 <input type="text" id="wrong-answer3" name="wrong-answer3" maxlength="256">
                 <br>
-                <input type="file" id='file' name='filename'>
+                <label for="question-file">Upload Media (Optional): </label>
+                <input type="file" id='question-file' name='filename'>
                 <br>
                 <button type="submit">Create</button>
             </form>

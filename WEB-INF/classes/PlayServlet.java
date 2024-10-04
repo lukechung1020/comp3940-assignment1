@@ -28,7 +28,7 @@ public class PlayServlet extends DbConnectionServlet {
 
             try (Connection con = DriverManager.getConnection(this.dbUrl, this.dbUsername, this.dbPassword);
                  Statement stmt = con.createStatement();
-                 ResultSet rs = stmt.executeQuery("SELECT id, name, image FROM categories")) {
+                 ResultSet rs = stmt.executeQuery("SELECT id, name, content_path FROM categories")) {
 
                 // check to see if there is category in the first place
                 if (!rs.isBeforeFirst()) {
@@ -57,17 +57,12 @@ public class PlayServlet extends DbConnectionServlet {
                 while (rs.next()) {
                     String categoryId = rs.getString("id");
                     String categoryName = rs.getString("name");
-                    byte[] imageBytes = rs.getBytes("image");
-
-                    // Display image as Base64 if it exists, otherwise use a placeholder
-                    String imageSrc = (imageBytes != null)
-                            ? "data:image/jpeg;base64," + java.util.Base64.getEncoder().encodeToString(imageBytes)
-                            : "images/placeholder.jpg";
+                    String imagePath = rs.getString("content_path");
 
                     out.println("<div class='grid-item'>");
                     out.println("<form action='quiz.html?categoryID=" + categoryId + "'>");
                     out.println("<input type='hidden' name='category' value='" + categoryId + "'>");
-                    out.println("<img src='" + imageSrc + "' alt='" + categoryName + "'>");
+                    out.println("<img src='" + imagePath + "' alt='" + categoryName + "'>");
                     out.println("<button type='submit'>" + categoryName + "</button>");
                     out.println("</form>");
                     out.println("</div>");

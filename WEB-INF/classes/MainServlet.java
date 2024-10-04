@@ -47,7 +47,7 @@ public class MainServlet extends DbConnectionServlet {
         + "<div style=\"text-align: center;\">");
 
     if ("admin".equalsIgnoreCase(userType)) {
-      html.append("<form action=\"upload-category\" method=\"GET\">"
+      html.append("<form action=\"create-category.html\">"
           + "<input type=\"submit\" value=\"UPLOAD CATEGORY\" />"
           + "</form>");
       html.append("<form action=\"create-question.html\" method=\"GET\">"

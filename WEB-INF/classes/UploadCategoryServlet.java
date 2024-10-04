@@ -1,22 +1,13 @@
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import jakarta.servlet.http.Part;
+import jakarta.servlet.http.*;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import org.json.*;
 
-//maximum file size is 16MB right now
-@MultipartConfig(maxFileSize = 16177215)
+@MultipartConfig
 public class UploadCategoryServlet extends DbConnectionServlet {
 
     @Override
@@ -31,9 +22,8 @@ public class UploadCategoryServlet extends DbConnectionServlet {
         String username = (String) session.getAttribute("username");
         String userType = null;
 
-        try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-             PreparedStatement ps = con
-                     .prepareStatement("SELECT user_type FROM users WHERE username = ?")) {
+        try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword); PreparedStatement ps = con
+                .prepareStatement("SELECT user_type FROM users WHERE username = ?")) {
             ps.setString(1, username);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -46,78 +36,59 @@ public class UploadCategoryServlet extends DbConnectionServlet {
 
         if (!"admin".equalsIgnoreCase(userType)) {
             response.sendRedirect("main");
-            return;
         }
-
-        response.setContentType("text/html");
-        PrintWriter out = response.getWriter();
-        out.println("<!DOCTYPE html>"
-            + "<html>"
-            + "<head><title>Upload Category</title></head>"
-            + "<body><h1>Create A New Category</h1><br>"
-            + "<form method='POST' action='upload-category' enctype='multipart/form-data'>"
-            + "<label for='category-name'>Category Name:</label>"
-            + "<input type='text' id='category-name' name='category-name' required><br><br>"
-            + "<label>Auto Play:</label><br>"
-            + "<input type='radio' id='auto-play-yes' name='auto-play' value='true'>"
-            + "<label for='auto-play-yes'>Yes</label><br>"
-            + "<input type='radio' id='auto-play-no' name='auto-play' value='false' checked>"
-            + "<label for='auto-play-no'>No</label><br><br>"
-            + "<label for='category-image'>Upload Image:</label>"
-            + "<input type='file' id='category-image' name='category-image' accept='image/*' required><br><br>"
-            + "<input type='submit' value='Submit'>"
-            + "</form>"
-            + "</body>"
-            + "</html>");
-     }
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         String categoryName = request.getParameter("category-name");
-        String autoPlayParam = request.getParameter("auto-play");
-        boolean autoPlay = "true".equals(autoPlayParam);
+        Part filePart = request.getPart("filename");
+        String fileName = filePart.getSubmittedFileName();
+        String filePath = "";
+        if (!fileName.trim().isEmpty()) {
+            filePath = System.getProperty("catalina.base") + "/webapps/comp3940-assignment1/media/" + fileName;
+        }
 
-        Part filePart = request.getPart("category-image");
+        JSONObject responseJSON = new JSONObject();
+        responseJSON.put("error", "");
 
-        if (filePart != null && filePart.getSize() > 0) {
-            try (InputStream imageStream = filePart.getInputStream()) {
+        try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword); PreparedStatement preparedStatement = con.prepareStatement(
+                "INSERT INTO categories (name, content_path) VALUES (?, ?)")) {
 
-                try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-                     PreparedStatement preparedStatement = con.prepareStatement(
-                             "INSERT INTO categories (name, image, auto_play) VALUES (?, ?, ?)")) {
-
-                    preparedStatement.setString(1, categoryName);
-                    preparedStatement.setBlob(2, imageStream);
-                    preparedStatement.setBoolean(3, autoPlay);
-
-                    int rowsAffected = preparedStatement.executeUpdate();
-
-                    if (rowsAffected > 0) {
-                        response.sendRedirect("upload-success.html");
-                    } else {
-                        response.sendRedirect("upload-fail.html");
-                    }
-                } catch (SQLException ex) {
-                    handleSQLException(ex, response);
-                }
-            } catch (IOException e) {
-                response.getWriter().println("Error reading the image file: " + e.getMessage());
+            preparedStatement.setString(1, categoryName);
+            if (!fileName.trim().isEmpty()) {
+                preparedStatement.setString(2, "media/" + fileName); 
+            }else {
+                preparedStatement.setString(2, fileName);
             }
-        } else {
-            response.getWriter().println("Invalid form data or image not selected.");
-        }
-    }
 
-    private void handleSQLException(SQLException ex, HttpServletResponse response) throws IOException {
-        StringBuilder errorMessage = new StringBuilder("Error uploading category:<br>");
-        while (ex != null) {
-            errorMessage.append("Message: ").append(ex.getMessage()).append("<br>")
-                    .append("SQLState: ").append(ex.getSQLState()).append("<br>")
-                    .append("ErrorCode: ").append(ex.getErrorCode()).append("<br>");
-            ex = ex.getNextException();
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            if (rowsAffected > 0) {
+                response.sendRedirect("upload-success.html");
+            } else {
+                responseJSON.put("status", "fail");
+            }
+        } catch (SQLException ex) {
+            while (ex != null) {
+                System.out.println("Uploading category error!");
+                System.out.println("Message: " + ex.getMessage());
+                System.out.println("SQLState: " + ex.getSQLState());
+                System.out.println("ErrorCode: " + ex.getErrorCode());
+                ex = ex.getNextException();
+                System.out.println("");
+            }
         }
-        response.getWriter().println(errorMessage.toString());
+
+        // Save file in server images directory
+        try {
+            filePart.write(filePath);
+        } catch (Exception e) {
+            System.out.println("No file was selected!");
+        }
+
+        response.getWriter().println(responseJSON);
     }
 }

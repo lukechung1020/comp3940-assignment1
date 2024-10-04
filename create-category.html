@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+    <head>
+        <title>Create A Category</title>
+    </head>
+    <body>
+        <div id="navbar">
+            <button id="home-btn" onclick="window.location.href='main'">Home</button>
+            <button id="logout-btn" onclick="window.location.href='logout'">Logout</button>
+        </div>
+        <br>
+        <h1>Create A New Category</h1>
+        <br>
+        <div id="create-question-form">
+            <form method="POST" action="upload-category" enctype="multipart/form-data">
+                <label for="category-name">Category Name:</label>
+                <input type="text" id="category-name" name="category-name" required><br><br>
+                <label for="category-image">Upload Image:</label>
+                <input type="file" id="category-image" name="filename" accept="image/*" required><br><br>
+                <button type="submit" value="Submit">Submit</button>
+            </form>
+        </div>
+    </body>
+</html>
