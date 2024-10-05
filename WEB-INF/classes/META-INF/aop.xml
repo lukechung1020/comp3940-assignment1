@@ -4,7 +4,6 @@
     </aspects>
     <weaver options="-verbose -showWeaveInfo -debug  -Xlint:ignore">
         <include within="PerformanceMonitorAspect"/>
-<!--        <include within="*..*Servlet"/>-->
         <include within="DbConnectionServlet"/>
         <include within="DeleteCategoryServlet"/>
         <include within="DeleteQuestionServlet"/>
