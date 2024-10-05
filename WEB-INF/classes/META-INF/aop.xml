@@ -1,0 +1,22 @@
+<aspectj>
+    <aspects>
+        <aspect name="PerformanceMonitorAspect"/>
+    </aspects>
+    <weaver options="-verbose -showWeaveInfo -debug  -Xlint:ignore">
+        <include within="PerformanceMonitorAspect"/>
+<!--        <include within="*..*Servlet"/>-->
+        <include within="DbConnectionServlet"/>
+        <include within="DeleteCategoryServlet"/>
+        <include within="DeleteQuestionServlet"/>
+        <include within="EditCategoryServlet"/>
+        <include within="EditQuestionServlet"/>
+        <include within="LoginServlet"/>
+        <include within="LogoutServlet"/>
+        <include within="MainServlet"/>
+        <include within="PlayServlet"/>
+        <include within="QuizServlet"/>
+        <include within="SignupServlet"/>
+        <include within="UploadCategoryServlet"/>
+        <include within="UploadQuestionServlet"/>
+    </weaver>
+</aspectj>
