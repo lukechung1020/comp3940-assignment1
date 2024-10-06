@@ -1,11 +1,13 @@
 
-import jakarta.servlet.http.*;
 import jakarta.servlet.*;
+import jakarta.servlet.http.*;
+import jakarta.servlet.annotation.MultipartConfig;
 import java.sql.*;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
+import org.json.*;
 
+
+@MultipartConfig
 public class CategoryServlet extends DbConnectionServlet {
 
     // Get specified category in JSON based on ID
@@ -24,6 +26,7 @@ public class CategoryServlet extends DbConnectionServlet {
 
         // JSON 
         JSONObject responseJSON = new JSONObject();
+        JSONObject categoryJSON = new JSONObject();
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -37,10 +40,14 @@ public class CategoryServlet extends DbConnectionServlet {
             Statement stmt = con.createStatement();
             result = stmt.executeQuery("SELECT * FROM categories WHERE id = " + categoryID);
             result.next();
+
             String category = result.getString("name");
             String categoryMedia = result.getString("content_path");
-            responseJSON.put("category", category);
-            responseJSON.put("media", categoryMedia);
+
+
+            categoryJSON.put("id", categoryID);
+            categoryJSON.put("name", category);
+            categoryJSON.put("media", categoryMedia);
         } catch (SQLException ex) {
             while (ex != null) {
                 System.out.println("Message: " + ex.getMessage());
@@ -51,12 +58,13 @@ public class CategoryServlet extends DbConnectionServlet {
             }
         }
         // Return a JSON response
-        responseJSON.put("categories", categoriesJSON);
+        responseJSON.put("category", categoryJSON);
         response.setContentType("application/json");
         response.getWriter().println(responseJSON);
     }
 
-    // Upload category
+    // Uploads category to DB
+    // Expected Request Parameters: category-name, filename
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -111,6 +119,7 @@ public class CategoryServlet extends DbConnectionServlet {
     }
 
     // Update category
+    // Expected Request Parameters: category-id and new-category-name
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

@@ -5,16 +5,17 @@ const urlParams = new URLSearchParams(queryString);
 const categoryID = urlParams.get("category");
 
 var currentQuestionNumber = 0;
+var currentQuestionAnswer = "";
 var questionsJSON;
 
 // Gets the JSON for all questions
 function get_questions() {
     const xhttp = new XMLHttpRequest();
-    xhttp.open("GET", "quiz?category=" + categoryID, true);
+    xhttp.open("GET", "questions?category=" + categoryID, true);
 
     xhttp.onload = function () {
         questionsJSON = JSON.parse(this.responseText);
-
+        console.log(questionsJSON);
         if (questionsJSON.questions.length === 0) {
             window.location.href = "no-questions.html";
         }
@@ -24,19 +25,36 @@ function get_questions() {
     xhttp.send();
 }
 
+window.onload = get_questions;
+
 // Update the HTML elements with the data from questions
 function updateQuestionFields(JSONObject) {
+    var answers = [];
+    currentQuestion = JSONObject.questions[currentQuestionNumber];
+    var questionID = JSONObject.questions[currentQuestionNumber].id;
+
+    answers[0] = currentQuestion.correct_answer;
+    currentQuestionAnswer = currentQuestion.correct_answer;
+    answers[1] = currentQuestion.wrong_answer_1;
+    if(currentQuestion.wrong_answer_2 != "") {
+        answers[2] = currentQuestion.wrong_answer_2;
+    }
+    if(currentQuestion.wrong_answer_3 != "") {
+        answers[3] = currentQuestion.wrong_answer_3;
+    }
+
+    answers = shuffle(answers);
+
     var questionNumber = document.getElementById("question numbers");
     questionNumber.innerText = "Question: " + ++currentQuestionNumber + "/" + JSONObject.questions.length;
 
     var question = document.getElementById("question");
-    question.innerText = JSONObject.questions[currentQuestionNumber - 1].question;
+    question.innerText = currentQuestion.question;
 
     var currentButtonNum = 1;
     for (let i = 0; i < 4; i++) {
         var currentAnswerButton = document.getElementById("button" + currentButtonNum++);
-        var answer = JSONObject.questions[currentQuestionNumber - 1].answers[i];
-        var questionID = JSONObject.questions[currentQuestionNumber - 1].id;
+        var answer = answers[i];
         if (answer === undefined) {
             currentAnswerButton.style.display = "none";
         } else {
@@ -93,25 +111,23 @@ function mediaParser(mediaPath) {
 }
 
 // Check the answer, alert if wrong, move onto next question if correct
-function checkAnswer(selectedAnswer, selectedQuestionID) {
-    const xhttp = new XMLHttpRequest();
-    xhttp.open("POST", "quiz?answer=" + selectedAnswer + "&questionID=" + selectedQuestionID, true);
-
-    xhttp.onload = function () {
-        const answerJSON = JSON.parse(this.responseText);
-
+function checkAnswer(selectedAnswer) {
+    if(selectedAnswer == currentQuestionAnswer) {
         if(questionsJSON.questions.length == currentQuestionNumber) {
             window.location.href = "end-of-quiz.html";
         }
-
-        if(answerJSON.correct_answer_given) {
-            mediaParser(questionsJSON.questions[currentQuestionNumber].content_path);
-            updateQuestionFields(questionsJSON);
-        } else {
-            alert("Answer is incorrect!");
-        }
+        mediaParser(questionsJSON.questions[currentQuestionNumber].content_path);
+        updateQuestionFields(questionsJSON);
+    } else {
+        alert("Answer is incorrect!");
     }
-    xhttp.send();
 }
 
-window.onload = get_questions;
+// Shuffles the array
+const shuffle = (array) => { 
+    for (let i = array.length - 1; i > 0; i--) { 
+      const j = Math.floor(Math.random() * (i + 1)); 
+      [array[i], array[j]] = [array[j], array[i]]; 
+    } 
+    return array; 
+}; 

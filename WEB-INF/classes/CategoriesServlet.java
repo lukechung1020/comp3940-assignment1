@@ -3,8 +3,7 @@ import jakarta.servlet.http.*;
 import jakarta.servlet.*;
 import java.sql.*;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
+import org.json.*;
 
 public class CategoriesServlet extends DbConnectionServlet {
     
@@ -30,7 +29,6 @@ public class CategoriesServlet extends DbConnectionServlet {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (Exception ex) {
             System.out.println("Message: " + ex.getMessage());
-            return;
         }
 
         try {
@@ -41,11 +39,13 @@ public class CategoriesServlet extends DbConnectionServlet {
                 numCategories++;
                 String category = result.getString("name");
                 String categoryID = result.getString("id");
+                String categoryMedia = result.getString("content_path");
 
                 // Put each category into the JSON array
                 JSONObject currCategory = new JSONObject();
                 currCategory.put("id", categoryID);
-                currCategory.put("category", category);
+                currCategory.put("name", category);
+                currCategory.put("content_path", categoryMedia);
                 categoriesJSON.put(currCategory);
             }
             if (numCategories == 0) {

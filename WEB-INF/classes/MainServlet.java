@@ -56,12 +56,12 @@ public class MainServlet extends DbConnectionServlet {
       html.append("<form action=\"edit-category\" method=\"GET\">"
           + "<input type=\"submit\" value=\"EDIT CATEGORY\" />"
           + "</form>");
-      html.append("<form action=\"edit-question\" method=\"GET\">"
+      html.append("<form action=\"edit-question.html\" method=\"GET\">"
           + "<input type=\"submit\" value=\"EDIT QUESTION\" />"
           + "</form>");
     }
 
-    html.append("<form action=\"play\" method=\"GET\">"
+    html.append("<form action=\"choose-category.html\" method=\"GET\">"
         + "<input type=\"submit\" value=\"PLAY\" />"
         + "</form>"
         + "</div>"

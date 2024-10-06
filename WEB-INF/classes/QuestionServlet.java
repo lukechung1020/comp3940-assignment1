@@ -1,55 +1,22 @@
-
-import jakarta.servlet.http.*;
 import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.MultipartConfig;
-import jakarta.servlet.http.Part;
+import java.sql.*;
+import java.io.File;
+import java.io.IOException;
 import org.json.*;
 
-import java.sql.*;
-import java.io.IOException;
-import java.io.PrintWriter;
-import netscape.javascript.JSException;
-
 @MultipartConfig
-public class UploadQuestionServlet extends DbConnectionServlet {
-
+public class QuestionServlet extends DbConnectionServlet {
     @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.setStatus(HttpServletResponse.SC_FOUND);
-            response.sendRedirect("login");
-            return;
-        }
-
-        String username = (String) session.getAttribute("username");
-        String userType = null;
-
-        try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-                PreparedStatement ps = con
-                        .prepareStatement("SELECT user_type FROM users WHERE username = ?")) {
-            ps.setString(1, username);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    userType = rs.getString("user_type");
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        if (!"admin".equalsIgnoreCase(userType)) {
-            response.sendRedirect("main");
-            return;
-        }
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String questionID = request.getParameter("question");
 
         Connection con = null;
-        ResultSet result = null;
-        int numCategories = 0;
+        ResultSet result;
 
-        // JSON 
         JSONObject responseJSON = new JSONObject();
-        JSONArray categoriesJSON = new JSONArray();
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -61,21 +28,18 @@ public class UploadQuestionServlet extends DbConnectionServlet {
         try {
             con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
             Statement stmt = con.createStatement();
-            result = stmt.executeQuery("SELECT * FROM categories");
-            while (result.next()) {
-                numCategories++;
-                String category = result.getString("name");
-                String categoryID = result.getString("id");
+            result = stmt.executeQuery("SELECT * FROM questions WHERE id = " + questionID);
+            result.next();
 
-                // Put each category into the JSON array
-                JSONObject currCategory = new JSONObject();
-                currCategory.put("id", categoryID);
-                currCategory.put("category", category);
-                categoriesJSON.put(currCategory);
-            }
-            if (numCategories == 0) {
-                response.sendRedirect("no-categories.html");
-            }
+            responseJSON.put("id", result.getString("id"));
+            responseJSON.put("category", result.getString("category"));
+            responseJSON.put("question", result.getString("question"));
+            responseJSON.put("content_path", result.getString("content_path"));
+            responseJSON.put("correct_answer", result.getString("correct_answer"));
+            responseJSON.put("wrong_answer_1", result.getString("wrong_answer_1"));
+            responseJSON.put("wrong_answer_2", result.getString("wrong_answer_2"));
+            responseJSON.put("wrong_answer_3", result.getString("wrong_answer_3"));
+
         } catch (SQLException ex) {
             while (ex != null) {
                 System.out.println("Message: " + ex.getMessage());
@@ -85,8 +49,7 @@ public class UploadQuestionServlet extends DbConnectionServlet {
                 System.out.println("");
             }
         }
-        // Return a JSON response
-        responseJSON.put("categories", categoriesJSON);
+
         response.setContentType("application/json");
         response.getWriter().println(responseJSON);
     }
