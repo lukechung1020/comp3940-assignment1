@@ -45,40 +45,12 @@
   </servlet-mapping>
 
   <servlet>
-    <servlet-name>Play</servlet-name>
-    <servlet-class>PlayServlet</servlet-class>
-  </servlet>
-  
-  <servlet-mapping>
-    <servlet-name>Play</servlet-name>
-    <url-pattern>/play</url-pattern>
-  </servlet-mapping>
-
-  <servlet>
-    <servlet-name>DeleteCategory</servlet-name>
-    <servlet-class>DeleteCategoryServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>DeleteCategory</servlet-name>
-    <url-pattern>/delete-category</url-pattern>
-  </servlet-mapping>
-
-  <servlet>
     <servlet-name>EditCategory</servlet-name>
     <servlet-class>EditCategoryServlet</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>EditCategory</servlet-name>
     <url-pattern>/edit-category</url-pattern>
-  </servlet-mapping>
-
-  <servlet>
-    <servlet-name>DeleteQuestion</servlet-name>
-    <servlet-class>DeleteQuestionServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>DeleteQuestion</servlet-name>
-    <url-pattern>/delete-question</url-pattern>
   </servlet-mapping>
 
   <servlet>
@@ -126,5 +98,14 @@
     <url-pattern>/questions</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>CheckLogin</servlet-name>
+    <servlet-class>CheckLoginServlet</servlet-class>
+  </servlet>
+  
+  <servlet-mapping>
+    <servlet-name>CheckLogin</servlet-name>
+    <url-pattern>/check-login</url-pattern>
+  </servlet-mapping>
 
 </web-app>
