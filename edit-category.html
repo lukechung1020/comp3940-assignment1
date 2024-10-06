@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Edit Category</title>
+</head>
+
+<body>
+    <div id="navbar">
+        <button id="home-btn" onclick="window.location.href='main'">Home</button>
+        <button id="logout-btn" onclick="window.location.href='logout'">Logout</button>
+    </div>
+    <br>
+    <h1>Edit Category</h1>
+    <br>
+    <div id="edit-category-form">
+        <label for="select-category">Select Category: </label>
+        <select id="select-category" name="select-category" onchange="javascript:get_category(this.value)">
+            <option value="-1">---</option>
+        </select>
+        <div id="edit-category-container" style="display: none;">
+            <form action="edit-category" method="POST" id="edit-category" enctype="multipart/form-data">
+                <input type="hidden" id="category-id" name="category-id">
+                <label for="category-name">New Category Name: </label>
+                <input type="text" id="category-name" name="category" maxlength="256" required>
+                <br>
+                <input type="hidden" id="current-image" name="current-image-path">
+                <div>Old Media: </div>
+                <div id="category-media">
+                </div>
+                <br>
+                <div>New Upload Media (Optional): </div>
+                <input type="file" id='category-file' name='filename'>
+                <br>
+                <br>
+                <button type="submit">Update Category</button>
+            </form>
+              <input type="hidden" id="delete-category-id" name="category">
+              <input type="hidden" id="delete-category-media" name="media">
+              <button onclick="delete_category()">Delete Category</button>
+        </div>
+    </div>
+</body>
+<script src="scripts/edit-category.js"></script>
+
+</html>

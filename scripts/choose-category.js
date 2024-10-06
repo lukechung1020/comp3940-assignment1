@@ -6,7 +6,9 @@ function get_categories() {
 
     xhttp.onload = function () {
         const obj = JSON.parse(this.responseText);
-        console.log(obj);
+        if(obj.status != "SUCCESS") {
+            window.location.href = "no-categories.html";
+        }
 
         for (let i = 0; i < obj.categories.length; i++) {
             var currCategory = obj.categories[i];

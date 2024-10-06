@@ -2,24 +2,20 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import java.sql.*;
 import java.io.*;
-import java.util.*;
 import org.json.*;
 
 public class QuestionsServlet extends DbConnectionServlet {
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // check if user is logged in
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.setStatus(HttpServletResponse.SC_FOUND);
-            response.sendRedirect("login");
-            return;
-        }
+        
+        response.setContentType("application/json");
+        JSONObject responseJSON = new JSONObject();
 
         Connection con;
         ResultSet result;
-        JSONObject responseJSON = new JSONObject();
+
         JSONArray questionsJSON = new JSONArray();
+        int numQuestions = 0;
 
         // Filters questions by category
         String categoryID = request.getParameter("category");
@@ -32,6 +28,8 @@ public class QuestionsServlet extends DbConnectionServlet {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (Exception ex) {
             System.out.println("Message: " + ex.getMessage());
+            responseJSON.put("status", "FAILED");
+            response.getWriter().println(responseJSON);
             return;
         }
 
@@ -41,6 +39,7 @@ public class QuestionsServlet extends DbConnectionServlet {
             result = stmt.executeQuery("SELECT * FROM questions" + sqlFilter);
 
             while (result.next()) {
+                numQuestions++;
                 JSONObject currentQuestion = new JSONObject();
                 currentQuestion.put("id", result.getString("id"));
                 currentQuestion.put("question", result.getString("question"));
@@ -52,6 +51,11 @@ public class QuestionsServlet extends DbConnectionServlet {
 
                 questionsJSON.put(currentQuestion);
             }
+            if(numQuestions == 0) {
+                responseJSON.put("status", "No questions!");
+                response.getWriter().println(responseJSON);
+                return;
+            }
         } catch (SQLException ex) {
             while (ex != null) {
                 System.out.println("Message: " + ex.getMessage());
@@ -60,8 +64,12 @@ public class QuestionsServlet extends DbConnectionServlet {
                 ex = ex.getNextException();
                 System.out.println("");
             }
+            responseJSON.put("status", "FAILED");
+            response.getWriter().println(responseJSON);
+            return;
         }
 
+        responseJSON.put("status", "SUCCESS");
         responseJSON.put("questions", questionsJSON);
         response.setContentType("application/json");
         response.getWriter().println(responseJSON);

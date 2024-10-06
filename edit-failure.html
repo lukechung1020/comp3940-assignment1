@@ -1,18 +1,19 @@
 <!DOCTYPE html>
+
 <head>
   <title>Edit Status</title>
 </head>
+
 <body>
-<h1>Your question/category has not been edited successfully. Please try again or return to the home page.</h1>
-<br>
-<form method="get" action="edit-question.html">
-  <button type="submit">Edit Another Question</button>
-</form>
-<form method="get" action="edit-category">
-  <button type="submit">Edit Another Category</button>
-</form>
-<form method="get" action="main">
-  <button type="submit">Home</button>
-</form>
+  <h1>Your question/category has not been edited/deleted successfully. Please try again!.</h1>
+  <br>
+  <button id="edit-question-btn" onclick="window.location.href='edit-question.html'">Edit Another Question</button>
+  <br>
+  <button id="edit-category-btn" onclick="window.location.href='edit-category.html'">Edit Another Category</button>
+  <br>
+  <form method="get" action="main">
+    <button type="submit">Home</button>
+  </form>
 </body>
+
 </html>

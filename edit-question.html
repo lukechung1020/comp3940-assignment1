@@ -14,13 +14,13 @@
     <br>
     <h2>If you leave optional fields blank, it won't show up when playing the quiz.</h2>
     <br>
-    <div id="create-question-form">
+    <div id="edit-question-form">
         <label for="select-question">Select Question: </label>
         <select id="select-question" name="select-question" onchange="javascript:get_question(this.value)">
             <option value="-1">---</option>
         </select>
         <div id="edit-question-container" style="display: none;">
-            <form action="edit-question" method="POST" id="create-question" enctype="multipart/form-data">
+            <form action="edit-question" method="POST" id="edit-question" enctype="multipart/form-data">
                 <input type="hidden" id="question-id" name="question-id">
                 <label for="category">New Category: </label>
                 <select id="category" name="category" required></select>
@@ -51,10 +51,9 @@
                 <br>
                 <button type="submit">Update Question</button>
             </form>
-            <form action="javascript:" method="DELETE">
-                <input type="hidden" name="question-id">
-                <button type="submit">Delete Question</button>
-            </form>
+            <input type="hidden" id="delete-question-id" name="question-id">
+            <input type="hidden" id="delete-question-media" name="question-media">
+            <button onclick="delete_question()">Delete Question</button>
         </div>
     </div>
 </body>

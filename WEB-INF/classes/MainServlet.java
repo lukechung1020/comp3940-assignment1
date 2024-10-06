@@ -53,7 +53,7 @@ public class MainServlet extends DbConnectionServlet {
       html.append("<form action=\"create-question.html\" method=\"GET\">"
           + "<input type=\"submit\" value=\"UPLOAD QUESTION\" />"
           + "</form>");
-      html.append("<form action=\"edit-category\" method=\"GET\">"
+      html.append("<form action=\"edit-category.html\" method=\"GET\">"
           + "<input type=\"submit\" value=\"EDIT CATEGORY\" />"
           + "</form>");
       html.append("<form action=\"edit-question.html\" method=\"GET\">"

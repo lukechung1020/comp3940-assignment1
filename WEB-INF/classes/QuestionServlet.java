@@ -2,7 +2,7 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.MultipartConfig;
 import java.sql.*;
-import java.io.File;
+import java.util.UUID;
 import java.io.IOException;
 import org.json.*;
 
@@ -11,17 +11,21 @@ public class QuestionServlet extends DbConnectionServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        response.setContentType("application/json");
+        JSONObject responseJSON = new JSONObject();      
+
         String questionID = request.getParameter("question");
 
         Connection con = null;
         ResultSet result;
 
-        JSONObject responseJSON = new JSONObject();
-
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (Exception ex) {
             System.out.println("Message: " + ex.getMessage());
+            responseJSON.put("status", "FAILED");
+            response.getWriter().println(responseJSON);
             return;
         }
 
@@ -48,15 +52,21 @@ public class QuestionServlet extends DbConnectionServlet {
                 ex = ex.getNextException();
                 System.out.println("");
             }
+            responseJSON.put("status", "FAILED");
+            response.getWriter().println(responseJSON);
+            return;
         }
 
-        response.setContentType("application/json");
+        responseJSON.put("status", "SUCCESS");
         response.getWriter().println(responseJSON);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        UUID uuid = UUID.randomUUID();
+        String uuidString = uuid.toString();
 
         Part filePart = request.getPart("filename");
         String categoryID = request.getParameter("category");
@@ -68,6 +78,7 @@ public class QuestionServlet extends DbConnectionServlet {
         String fileName = filePart.getSubmittedFileName();
         String filePath = "";
         if (!fileName.trim().isEmpty()) {
+            fileName = uuidString + fileName;
             filePath = System.getProperty("catalina.base") + "/webapps/comp3940-assignment1/media/" + fileName;
         }
 

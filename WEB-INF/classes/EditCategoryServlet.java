@@ -1,169 +1,62 @@
-import jakarta.servlet.ServletException;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.MultipartConfig;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import jakarta.servlet.http.Part;
-
+import java.sql.*;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.UUID;
+import java.util.ArrayList;
+import org.json.JSONObject;
 
-//maximum file size is 16MB right now
-@MultipartConfig(maxFileSize = 16177215)
+
+@MultipartConfig
 public class EditCategoryServlet extends DbConnectionServlet {
-
-    @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.setStatus(HttpServletResponse.SC_FOUND);
-            response.sendRedirect("login");
-            return;
-        }
-
-        String username = (String) session.getAttribute("username");
-        String userType = null;
-
-        try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-             PreparedStatement ps = con
-                     .prepareStatement("SELECT user_type FROM users WHERE username = ?")) {
-            ps.setString(1, username);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    userType = rs.getString("user_type");
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        if (!"admin".equalsIgnoreCase(userType)) {
-            response.sendRedirect("main");
-            return;
-        }
-
-        response.setContentType("text/html");
-        PrintWriter out = response.getWriter();
-        StringBuilder categoryOptions = new StringBuilder();
-        String selectedCategoryId = request.getParameter("category-id");
-        String existingCategoryName = "";
-
-        // connect to the database and retrieve categories
-        try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-             PreparedStatement stmt = con.prepareStatement("SELECT id, name FROM categories")) {
-
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String name = rs.getString("name");
-                categoryOptions.append("<option value='").append(id).append("'")
-                        .append(selectedCategoryId != null && selectedCategoryId.equals(String.valueOf(id))
-                                ? " selected"
-                                : "")
-                        .append(">").append(name).append("</option>");
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            out.println("<p>Error loading categories.</p>");
-            return;
-        }
-
-        // fetch details of the selected category to prepopulate the form fields
-        if (selectedCategoryId != null && !selectedCategoryId.isEmpty()) {
-            try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-                 PreparedStatement ps = con.prepareStatement("SELECT name FROM categories WHERE id = ?")) {
-
-                ps.setInt(1, Integer.parseInt(selectedCategoryId));
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        existingCategoryName = rs.getString("name");
-                    }
-                }
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-                out.println("<p>Error loading selected category details.</p>");
-            }
-        }
-
-        // HTML form for editing a category
-        out.println("<!DOCTYPE html>"
-                + "<html><head><title>Edit Category</title></head>"
-                + "<body><h1>Edit Category</h1><br>"
-                + "<a href='main'>Back to Main Page</a><br><br>"
-                + "<form method='GET' action='edit-category'>"
-                + "<label for='category-id'>Select Category:</label>"
-                + "<select id='category-id' name='category-id' required onchange='this.form.submit()'>"
-                + "<option value=''>Select a category</option>"
-                + categoryOptions.toString()
-                + "</select><br>"
-                + "</form>");
-
-        // display the editing form only if a category is selected
-        if (selectedCategoryId != null && !selectedCategoryId.isEmpty()) {
-            out.println("<form method='POST' action='edit-category' enctype='multipart/form-data'>"
-                    + "<input type='hidden' name='category-id' value='" + selectedCategoryId + "'>"
-                    + "<label for='new-category-name'>New Category Name:</label>"
-                    + "<input type='text' id='new-category-name' name='new-category-name' value='"
-                    + existingCategoryName + "' required><br>"
-                    + "<label for='category-image'>Upload Image:</label>"
-                    + "<input type='file' id='category-image' name='category-image' accept='image/*' required><br>"
-                    + "<input type='submit' value='Update Category'><br><br><br>"
-                    + "</form>");
-
-            // separate form for deleting the category
-            out.println("<form method='POST' action='delete-category'>"
-                    + "<input type='hidden' name='category-id' value='" + selectedCategoryId + "'>"
-                    + "<input type='submit' value='Delete Category'>"
-                    + "</form>");
-        }
-
-        out.println("</body></html>");
-    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // retrieve form data
-        String categoryId = request.getParameter("category-id");
-        String newCategoryName = request.getParameter("new-category-name");
 
-        // validate inputs
-        if (categoryId == null || categoryId.isEmpty()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Category ID is required.");
+        UUID uuid = UUID.randomUUID();
+        String uuidString = uuid.toString();
+
+        Part newFilePart = request.getPart("filename");
+        String categoryID = request.getParameter("category-id");
+        String newCategoryName = request.getParameter("category");
+        String currentFilePath = request.getParameter("current-image-path");
+        String newFileName = newFilePart != null ? uuidString + newFilePart.getSubmittedFileName() : "";
+        String newFilePath = "";
+
+        Connection con = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException ex) {
+            System.out.println("Message: " + ex.getMessage());
             return;
         }
 
-        // retrieve the image file part
-        Part filePart = request.getPart("category-image");
-        InputStream imageStream = null;
+        try {
+            con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
 
-        if (filePart != null && filePart.getSize() > 0) {
-            imageStream = filePart.getInputStream();
-        } else {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Image file is required.");
-            return;
-        }
+            String updateQuery = "UPDATE categories SET name = ?";
+            if (!newFileName.trim().isEmpty()) {
+                updateQuery += ", content_path = ?";
+                newFilePath = System.getProperty("catalina.base") + "/webapps/comp3940-assignment1/media/"
+                        + newFileName;
+            }
+            updateQuery += " WHERE id = ?";
 
-        // connect to the database to update the category
-        try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-             PreparedStatement ps = con.prepareStatement(
-                     "UPDATE categories SET name = ?, image = ? WHERE id = ?")) {
+            PreparedStatement ps = con.prepareStatement(updateQuery);
+            ps.setString(1, newCategoryName);
 
-            // set parameters for the update query
-            ps.setString(1, newCategoryName); // Always update to new name
-            ps.setBlob(2, imageStream); // Update the image
-            ps.setInt(3, Integer.parseInt(categoryId));
+            // If a new file is uploaded, set the file path in the query
+            if (!newFileName.trim().isEmpty()) {
+                ps.setString(2, "media/" + newFileName);
+                ps.setInt(3, Integer.parseInt(categoryID)); // Set the question ID as 8th parameter
+            } else {
+                ps.setInt(2, Integer.parseInt(categoryID)); // Set the question ID as 7th parameter if no new file
+            }
 
-            // execute the update
+            // Execute the update query
             int rowsUpdated = ps.executeUpdate();
             if (rowsUpdated > 0) {
                 response.sendRedirect("edit-success.html");
@@ -171,13 +64,97 @@ public class EditCategoryServlet extends DbConnectionServlet {
                 response.sendRedirect("edit-failure.html");
             }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error updating category.");
-        } finally {
-            if (imageStream != null) {
-                imageStream.close();
+        } catch (SQLException ex) {
+            System.out.println("SQL Error: " + ex.getMessage());
+        }
+
+        // Save the file in the server directory if a new file is provided
+        if (!newFileName.trim().isEmpty()) {
+            try {
+                newFilePart.write(newFilePath);
+                // Delete the old file after uploading the new one
+                File oldFile = new File(System.getProperty("catalina.base") + "/webapps/comp3940-assignment1/" + currentFilePath);
+                if (oldFile.exists()) {
+                    oldFile.delete();
+                }
+            } catch (Exception e) {
+                System.out.println("File handling error: " + e.getMessage());
             }
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+    
+        response.setContentType("application/json");
+        JSONObject responseJSON = new JSONObject();
+    
+        String categoryID = request.getParameter("category-id");
+        String categoryMediaPath = request.getParameter("category-media");
+
+        ArrayList<String> questionMedia = new ArrayList<String>();
+    
+        Connection con = null;
+        ResultSet result;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException ex) {
+            System.out.println("Message: " + ex.getMessage());
+            responseJSON.put("status", "FAILED");
+            response.getWriter().println(responseJSON);
+            return;
+        }
+    
+        try {
+            con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
+    
+            // Get list of question media for that category
+            // Delete the category from DB -> will delete related questions
+            // If this is successful, go through the question media and delete from server
+            // Finally delete category media
+
+            Statement stmt = con.createStatement();
+            result = stmt.executeQuery("SELECT * FROM questions WHERE category = " + categoryID);
+            while(result.next()) {
+                String contentPath = result.getString("content_path");
+                if(!contentPath.trim().isEmpty()) {
+                    questionMedia.add(contentPath);
+                }
+            }
+
+            PreparedStatement ps = con.prepareStatement("DELETE FROM categories WHERE id = ?");
+            ps.setInt(1, Integer.parseInt(categoryID));
+            int rowsAffected = ps.executeUpdate();
+            
+            if (rowsAffected == 0) {
+                // If no rows were affected, it means the deletion failed
+                responseJSON.put("status", "FAILED");
+                response.getWriter().println(responseJSON);
+                return;
+            }
+
+            // Delete question media
+            questionMedia.forEach((mediaPath) -> {
+                File media = new File(System.getProperty("catalina.base") + "/webapps/comp3940-assignment1/" + mediaPath);
+                if(media.exists()) {
+                    media.delete();
+                }
+            });
+    
+            // Delete category media
+            File oldFile = new File(System.getProperty("catalina.base") + "/webapps/comp3940-assignment1/" + categoryMediaPath);
+            if (oldFile.exists()) {
+                oldFile.delete();
+            }
+    
+            responseJSON.put("status", "SUCCESS");
+            response.getWriter().println(responseJSON);
+    
+        } catch (SQLException ex) {
+            System.out.println("SQL Error: " + ex.getMessage());
+            responseJSON.put("status", "FAILED");
+            response.getWriter().println(responseJSON);
         }
     }
 }

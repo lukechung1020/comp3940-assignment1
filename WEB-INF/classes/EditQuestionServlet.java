@@ -1,10 +1,12 @@
 import jakarta.servlet.http.*;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.MultipartConfig;
-
 import java.sql.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
+
+import org.json.JSONObject;
 
 
 @MultipartConfig
@@ -13,8 +15,9 @@ public class EditQuestionServlet extends DbConnectionServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html");
-        response.setCharacterEncoding("UTF-8");
+
+        UUID uuid = UUID.randomUUID();
+        String uuidString = uuid.toString();
 
         Part newFilePart = request.getPart("filename");
         String newCategoryID = request.getParameter("category");
@@ -25,7 +28,7 @@ public class EditQuestionServlet extends DbConnectionServlet {
         String newWrongAnswer2 = request.getParameter("wrong-answer2");
         String newWrongAnswer3 = request.getParameter("wrong-answer3");
         String currentFilePath = request.getParameter("current-image-path");
-        String newFileName = newFilePart != null ? newFilePart.getSubmittedFileName() : "";
+        String newFileName = newFilePart != null ? uuidString + newFilePart.getSubmittedFileName() : "";
         String newFilePath = "";
 
         Connection con = null;
@@ -33,6 +36,7 @@ public class EditQuestionServlet extends DbConnectionServlet {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException ex) {
             System.out.println("Message: " + ex.getMessage());
+            response.sendRedirect("edit-failure.html");
             return;
         }
 
@@ -87,6 +91,56 @@ public class EditQuestionServlet extends DbConnectionServlet {
             } catch (Exception e) {
                 System.out.println("File handling error: " + e.getMessage());
             }
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+    
+        response.setContentType("application/json");
+        JSONObject responseJSON = new JSONObject();
+    
+        String questionID = request.getParameter("question-id");
+        String questionMediaPath = request.getParameter("question-media");
+    
+        Connection con = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException ex) {
+            System.out.println("Message: " + ex.getMessage());
+            responseJSON.put("status", "FAILED");
+            response.getWriter().println(responseJSON);
+            return;
+        }
+    
+        try {
+            con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
+    
+            PreparedStatement ps = con.prepareStatement("DELETE FROM questions WHERE id = ?");
+            ps.setInt(1, Integer.parseInt(questionID));
+            int rowsAffected = ps.executeUpdate();
+            
+            if (rowsAffected == 0) {
+                // If no rows were affected, it means the deletion failed
+                responseJSON.put("status", "FAILED");
+                response.getWriter().println(responseJSON);
+                return;
+            }
+    
+            // Delete the associated media file if it exists
+            File oldFile = new File(System.getProperty("catalina.base") + "/webapps/comp3940-assignment1/" + questionMediaPath);
+            if (oldFile.exists()) {
+                oldFile.delete();
+            }
+    
+            responseJSON.put("status", "SUCCESS");
+            response.getWriter().println(responseJSON);
+    
+        } catch (SQLException ex) {
+            System.out.println("SQL Error: " + ex.getMessage());
+            responseJSON.put("status", "FAILED");
+            response.getWriter().println(responseJSON);
         }
     }
 

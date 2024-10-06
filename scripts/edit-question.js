@@ -1,11 +1,20 @@
 
+let isDeleting = false;
+
 // Gets the questions from the DB and updates the select
 function get_questions() {
     const xhttp = new XMLHttpRequest();
     xhttp.open("GET", "questions", true);
 
     xhttp.onload = function () {
+        if(isDeleting) {
+            return;
+        }
         const questionsJSON = JSON.parse(this.responseText);
+        if(questionsJSON.status != "SUCCESS") {
+            window.location.href = "create-question.html";
+        }
+
         var question_select = document.getElementById("select-question");
 
         for (let i = 0; i < questionsJSON.questions.length; i++) {
@@ -28,6 +37,7 @@ function get_categories(callback) {
 
     xhttp.onload = function () {
         var categoriesJSON = JSON.parse(this.responseText);
+
         var category_select = document.getElementById("category");
 
         for (let i = 0; i < categoriesJSON.categories.length; i++) {
@@ -89,6 +99,7 @@ function media_parser(mediaPath) {
     }
 
     document.getElementById("current-image").value = mediaPath;
+    document.getElementById("delete-question-media").value = mediaPath;
 }
 
 var questionJSON;
@@ -105,11 +116,12 @@ function get_question(questionID) {
     xhttp.onload = function () {
         var questionJSON = JSON.parse(this.responseText);
         get_categories(() => {
-            updateSelectedCategory(questionJSON.category);
+            update_selected_category(questionJSON.category);
         });
         media_parser(questionJSON.content_path);
 
         document.getElementById("question-id").value = questionJSON.id;
+        document.getElementById("delete-question-id").value = questionJSON.id;
         document.getElementById("question").value = questionJSON.question;
         document.getElementById("correct-answer").value = questionJSON.correct_answer;
         document.getElementById("wrong-answer1").value = questionJSON.wrong_answer_1;
@@ -122,6 +134,36 @@ function get_question(questionID) {
     xhttp.send();
 }
 
-function updateSelectedCategory(categoryID) {
+function update_selected_category(categoryID) {
     document.getElementById("category").value = categoryID;
+}
+
+function delete_question() {
+    isDeleting = true;
+    const xhttp = new XMLHttpRequest();
+
+    var questionID = document.getElementById("delete-question-id").value;
+    var questionMedia = document.getElementById("delete-question-media").value;
+
+    xhttp.open("DELETE", "edit-question?question-id=" + questionID + "&question-media=" + questionMedia, true);
+
+    xhttp.onload = function () {
+        // Parse the response from the server
+        var responseJSON = JSON.parse(this.responseText);
+        
+        if (responseJSON.status === "SUCCESS") {
+            // If deletion was successful, redirect to the success page
+            window.location.href = "edit-success.html";
+        } else {
+            // If deletion failed, redirect to the failure page
+            window.location.href = "edit-failure.html";
+        }
+    };
+
+    xhttp.onerror = function () {
+        // Handle request error (network issues, etc.)
+        window.location.href = "edit-failure.html";
+    };
+
+    xhttp.send();
 }

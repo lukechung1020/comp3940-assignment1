@@ -16,7 +16,7 @@ function get_questions() {
     xhttp.onload = function () {
         questionsJSON = JSON.parse(this.responseText);
         console.log(questionsJSON);
-        if (questionsJSON.questions.length === 0) {
+        if (questionsJSON.status == "No questions!") {
             window.location.href = "no-questions.html";
         }
         mediaParser(questionsJSON.questions[0].content_path);

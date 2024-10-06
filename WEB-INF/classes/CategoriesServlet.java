@@ -10,25 +10,23 @@ public class CategoriesServlet extends DbConnectionServlet {
     // Get all categories in JSON
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.setStatus(HttpServletResponse.SC_FOUND);
-            response.sendRedirect("login");
-            return;
-        }
+        
+        response.setContentType("application/json");
+        JSONObject responseJSON = new JSONObject();
 
         Connection con = null;
         ResultSet result = null;
         int numCategories = 0;
 
-        // JSON 
-        JSONObject responseJSON = new JSONObject();
         JSONArray categoriesJSON = new JSONArray();
 
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (Exception ex) {
             System.out.println("Message: " + ex.getMessage());
+            responseJSON.put("status", "FAILED");
+            response.getWriter().println(responseJSON);
+            return;
         }
 
         try {
@@ -49,7 +47,9 @@ public class CategoriesServlet extends DbConnectionServlet {
                 categoriesJSON.put(currCategory);
             }
             if (numCategories == 0) {
-                response.sendRedirect("no-categories.html");
+                responseJSON.put("status", "No cateogories!");
+                response.getWriter().println(responseJSON);
+                return;
             }
         } catch (SQLException ex) {
             while (ex != null) {
@@ -61,8 +61,8 @@ public class CategoriesServlet extends DbConnectionServlet {
             }
         }
         // Return a JSON response
+        responseJSON.put("status", "SUCCESS");
         responseJSON.put("categories", categoriesJSON);
-        response.setContentType("application/json");
         response.getWriter().println(responseJSON);
     }
 }
