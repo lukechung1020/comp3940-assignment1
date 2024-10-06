@@ -4,7 +4,6 @@ import jakarta.servlet.*;
 import java.sql.*;
 import java.io.*;
 import org.mindrot.jbcrypt.BCrypt;
-import java.util.Properties;
 import org.json.*;
 
 public class LoginServlet extends DbConnectionServlet {
