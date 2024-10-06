@@ -4,98 +4,84 @@ import java.sql.*;
 import java.io.*;
 import org.mindrot.jbcrypt.BCrypt;
 import java.util.Properties;
+import org.json.*;
 
 public class SignupServlet extends DbConnectionServlet {
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute("username") != null) {
-            response.sendRedirect("main");
-            return;
-        }
-
-        response.setContentType("text/html");
-        PrintWriter out = response.getWriter();
-        out.println("<!DOCTYPE html>"
-                + "<html lang=\"en\">"
-                + "<head>"
-                + "<meta charset=\"UTF-8\">"
-                + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
-                + "<title>Signup</title>"
-                + "</head>"
-                + "<body>"
-                + "<h1>Signup</h1>"
-                + "<form action=\"signup\" method=\"POST\">"
-                + "<label for=\"username\">Username:</label>"
-                + "<input type=\"text\" id=\"username\" name=\"username\" required>"
-                + "<br><br>"
-                + "<label for=\"password\">Password:</label>"
-                + "<input type=\"password\" id=\"password\" name=\"password\" required>"
-                + "<br><br>"
-                + "<label for=\"confirmPassword\">Confirm Password:</label>"
-                + "<input type=\"password\" id=\"confirmPassword\" name=\"confirmPassword\" required>"
-                + "<br><br>"
-                + "<input type=\"submit\" value=\"Sign up\">"
-                + "</form>"
-                + "<p>Already have an account? <a href=\"login\">Login</a></p>"
-                + "</body>"
-                + "</html>");
+  @Override
+  public void doGet(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
+    HttpSession session = request.getSession(false);
+    if (session != null && session.getAttribute("username") != null) {
+      response.sendRedirect("main");
+      return;
     }
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html");
-        PrintWriter out = response.getWriter();
+    request.getRequestDispatcher("signup.html").forward(request, response);
+  }
 
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
-        String confirmPassword = request.getParameter("confirmPassword");
+  @Override
+  public void doPost(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
 
-        if (!password.equals(confirmPassword)) {
-            out.println("Passwords do not match. Please try again.");
-            out.println("<a href=\"signup\">Back to sign up</a>");
-            return;
-        }
+    response.setContentType("application/json");
 
-        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+    PrintWriter out = response.getWriter();
+    StringBuilder sb = new StringBuilder();
+    BufferedReader reader = request.getReader();
 
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-
-            PreparedStatement checkUserPs = con.prepareStatement("SELECT COUNT(*) FROM users WHERE username = ?");
-            checkUserPs.setString(1, username);
-            ResultSet rs = checkUserPs.executeQuery();
-
-            if (rs.next() && rs.getInt(1) > 0) {
-                out.println("Username already exists. Please choose a different username.");
-                out.println("<a href=\"signup\">Back to sign up</a>");
-            } else {
-                PreparedStatement ps = con.prepareStatement("INSERT INTO users (username, password) VALUES (?, ?)");
-                ps.setString(1, username);
-                ps.setString(2, hashedPassword);
-                int i = ps.executeUpdate();
-                if (i > 0) {
-                    HttpSession session = request.getSession(true);
-                    session.setAttribute("username", username);
-
-                    // Success message and manually go to main page
-                    out.println("You are successfully registered :)");
-                    out.println("<a href=\"main\">Go to main page</a>");
-
-                    // OR Redirect straight to main after successful sign up
-                    // response.sendRedirect("main");
-                } else {
-                    out.println("Registration failed :(");
-                    out.println("<a href=\"signup\">Back to sign up</a>");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            out.println("An error occurred: " + e.getMessage());
-            out.println("<a href=\"signup\">Back to sign up</a>");
-        }
-
+    String line;
+    while ((line = reader.readLine()) != null) {
+      sb.append(line);
     }
+
+    JSONObject jsonObject = new JSONObject(sb.toString());
+    String username = jsonObject.getString("username");
+    String password = jsonObject.getString("password");
+    String confirmPassword = jsonObject.getString("confirmPassword");
+
+    JSONObject jsonResponse = new JSONObject();
+
+    if (!password.equals(confirmPassword)) {
+      jsonResponse.put("success", false);
+      jsonResponse.put("message", "Passwords do not match. Please try again.");
+      out.print(jsonResponse.toString());
+      return;
+    }
+
+    String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
+    try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword)) {
+      PreparedStatement checkUserPs = con.prepareStatement("SELECT COUNT(*) FROM users WHERE username = ?");
+      checkUserPs.setString(1, username);
+      ResultSet rs = checkUserPs.executeQuery();
+
+      if (rs.next() && rs.getInt(1) > 0) {
+        jsonResponse.put("success", false);
+        jsonResponse.put("message", "Username already exists. Please choose a different username.");
+      } else {
+        PreparedStatement ps = con.prepareStatement("INSERT INTO users (username, password) VALUES (?, ?)");
+        ps.setString(1, username);
+        ps.setString(2, hashedPassword);
+        int i = ps.executeUpdate();
+
+        if (i > 0) {
+          HttpSession session = request.getSession(true);
+          session.setAttribute("username", username);
+
+          jsonResponse.put("success", true);
+          jsonResponse.put("message", "You are successfully registered.");
+        } else {
+          jsonResponse.put("success", false);
+          jsonResponse.put("message", "Registration failed. Please try again.");
+        }
+      }
+      out.print(jsonResponse.toString());
+    } catch (Exception e) {
+      e.printStackTrace();
+      jsonResponse.put("success", false);
+      jsonResponse.put("message", "An error occurred: " + e.getMessage());
+      out.print(jsonResponse.toString());
+    }
+  }
 }

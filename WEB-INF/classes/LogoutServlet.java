@@ -4,26 +4,20 @@ import java.io.*;
 
 public class LogoutServlet extends HttpServlet {
 
-	public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// Set response content type
+  @Override
+  public void doPost(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
 
-		HttpSession session = request.getSession(false);
-		if (session != null && request.isRequestedSessionIdValid()) {
-			session.invalidate();
-		}
+    HttpSession session = request.getSession(false);
+    if (session != null && request.isRequestedSessionIdValid()) {
+      session.invalidate();
+    }
+    
+    response.setContentType("application/json");
+    response.setCharacterEncoding("UTF-8");
 
-		response.sendRedirect("login");
-
-	}
-
-	// Method to handle POST method request.
-	public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// Set response content type
-		HttpSession session = request.getSession(false);
-		if (session != null && request.isRequestedSessionIdValid()) {
-			session.invalidate();
-		}
-		response.sendRedirect("login");
-
-	}
+    PrintWriter out = response.getWriter();
+    out.println("{\"success\": true}");
+    out.flush();
+  }
 }

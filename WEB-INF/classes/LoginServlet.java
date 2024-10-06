@@ -5,76 +5,78 @@ import java.sql.*;
 import java.io.*;
 import org.mindrot.jbcrypt.BCrypt;
 import java.util.Properties;
+import org.json.*;
 
 public class LoginServlet extends DbConnectionServlet {
 
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute("username") != null) {
-            response.sendRedirect("main");
-            return;
-        }
-
-        response.setContentType("text/html");
-        PrintWriter out = response.getWriter();
-        out.println("<html>"
-                + "<head>"
-                + "<title>Login</title>"
-                + "</head>"
-                + "<body>"
-                + "<h1>Login</h1>"
-                + "<form action=\"login\" method=\"POST\">"
-                + "<label for=\"username\">Username:</label>"
-                + "<input type=\"text\" id=\"username\" name=\"username\" required>"
-                + "<br><br>"
-                + "<label for=\"password\">Password:</label>"
-                + "<input type=\"password\" id=\"password\" name=\"password\" required />"
-                + "<br><br>"
-                + "<input type=\"submit\" value=\"Log in\" />"
-                + "</form>"
-                + "<p>Don't have an account? <a href=\"signup\">Sign up</a></p>"
-                + "</body>"
-                + "</html>");
+  @Override
+  public void doGet(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
+    HttpSession session = request.getSession(false);
+    if (session != null && session.getAttribute("username") != null) {
+      response.sendRedirect("main");
+      return;
     }
 
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setContentType("text/html");
-        PrintWriter out = response.getWriter();
+    request.getRequestDispatcher("login.html").forward(request, response);
+  }
 
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
+  @Override
+  public void doPost(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
 
-        if (username == null || password == null || username.isEmpty() || password.isEmpty()) {
-            out.println("Username or Password cannot be empty.");
-            return;
-        }
+    response.setContentType("application/json");
 
-        try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-                PreparedStatement ps = con.prepareStatement("SELECT password FROM users WHERE username = ?")) {
+    PrintWriter out = response.getWriter();
+    StringBuilder sb = new StringBuilder();
+    BufferedReader reader = request.getReader();
 
-            Class.forName("com.mysql.cj.jdbc.Driver");
-
-            ps.setString(1, username);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    String storedHashedPassword = rs.getString("password");
-                    if (BCrypt.checkpw(password, storedHashedPassword)) {
-                        HttpSession session = request.getSession(true);
-                        session.setAttribute("username", username);
-                        response.sendRedirect("main");
-                    } else {
-                        out.println("Invalid username or password.");
-                        out.println("<a href=\"login\">Back to log in</a>");
-                    }
-                } else {
-                    out.println("Invalid username or password.");
-                    out.println("<a href=\"login\">Back to log in</a>");
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            out.println("An error occurred: " + ex.getMessage());
-            out.println("<a href=\"login\">Back to log in</a>");
-        }
+    String line;
+    while ((line = reader.readLine()) != null) {
+      sb.append(line);
     }
+
+    JSONObject jsonObject = new JSONObject(sb.toString());
+    String username = jsonObject.getString("username");
+    String password = jsonObject.getString("password");
+
+    JSONObject jsonResponse = new JSONObject();
+
+    if (username == null || password == null || username.isEmpty() || password.isEmpty()) {
+      jsonResponse.put("success", false);
+      jsonResponse.put("message", "Username or Password cannot be empty.");
+      out.print(jsonResponse.toString());
+      return;
+    }
+
+    try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
+        PreparedStatement ps = con.prepareStatement("SELECT password FROM users WHERE username = ?")) {
+
+      ps.setString(1, username);
+      try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+          String storedHashedPassword = rs.getString("password");
+          if (BCrypt.checkpw(password, storedHashedPassword)) {
+            HttpSession session = request.getSession(true);
+            session.setAttribute("username", username);
+
+            jsonResponse.put("success", true);
+            jsonResponse.put("message", "Login successful.");
+          } else {
+            jsonResponse.put("success", false);
+            jsonResponse.put("message", "Invalid username or password.");
+          }
+        } else {
+          jsonResponse.put("success", false);
+          jsonResponse.put("message", "Invalid username or password.");
+        }
+      }
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      jsonResponse.put("success", false);
+      jsonResponse.put("message", "An error occurred: " + ex.getMessage());
+    }
+
+    out.print(jsonResponse.toString());
+  }
 }

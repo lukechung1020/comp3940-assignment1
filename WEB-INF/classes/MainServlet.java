@@ -66,10 +66,9 @@ public class MainServlet extends DbConnectionServlet {
         + "</form>"
         + "</div>"
         + "<div style=\"text-align: center;\">"
-        + "<form action=\"logout\" method=\"GET\">"
-        + "<input type=\"submit\" value=\"LOGOUT\" />"
-        + "</form>"
+        + "<button id=\"logout-button\">LOGOUT</button>"
         + "</div>"
+        + "<script src=\"scripts/logout.js\"></script>"
         + "</body>"
         + "</html>");
     PrintWriter out = response.getWriter();

@@ -1,0 +1,70 @@
+:root {
+  --background-color: #f9f9f9;
+  --text-color: #222222;
+  --shadow-color: #c9c9c9;
+  --button-color: #626f47;
+  --button-hover-color: #4f5f2f;
+  --button-text-color: #ffffff;
+  --form-background-color: --button-text-color;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+h1 {
+  text-shadow: var(--shadow-color) 1px 1px 1px;
+  text-align: center;
+  margin: 2rem;
+}
+
+p {
+  text-align: center;
+}
+
+#signup-form,
+#login-form {
+  width: 100%;
+  max-width: 500px;
+  margin: 1rem auto;
+  padding: 20px;
+  background-color: var(--form-background-color);
+  border-radius: 5px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+
+  label {
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid var(--shadow-color);
+    border-radius: 5px;
+  }
+
+  button {
+    display: block;
+    margin: 10px auto;
+    padding: 10px 30px;
+    background-color: var(--button-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background-color: var(--button-hover-color);
+  }
+}
