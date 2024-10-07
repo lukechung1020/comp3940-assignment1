@@ -100,7 +100,11 @@ function mediaParser(mediaPath) {
 
         var videoSource = document.createElement("source");
         videoSource.src = mediaPath;
-        videoSource.type = "video/" + mediaType;
+        if (mediaType === "mov") {
+            videoSource.type = "video/mp4";
+        } else {
+            videoSource.type = "video/" + mediaType;
+        }
 
         questionMedia.appendChild(videoElement);
         videoElement.appendChild(videoSource);

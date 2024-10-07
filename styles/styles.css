@@ -66,6 +66,20 @@ input {
   border-radius: 5px;
 }
 
+select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid var(--shadow-color);
+  border-radius: 5px;
+}
+
+img, video {
+  width: 100%;
+  display: block;
+  margin: 20px auto;
+}
+
 .button-common {
   width: 100%;
   max-width: 600px;

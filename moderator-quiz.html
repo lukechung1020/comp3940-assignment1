@@ -13,18 +13,41 @@
     <button id="home-btn" class="button-common" onclick="window.location.href='main'">HOME</button>
   </div>
   <h2 id="current-session-id">Session ID: </h2>
-  <div id="question-container" class="quiz-box">
-    <h1 id="question numbers"></h1>
-    <h2 id="question"></h2>
-    <div id="question-media"></div>
-    <br>
-    <button id="show-answer-btn" onclick="display_answer()" class="button-common">Show Answer</button>
-    <button id="next-question-btn" onclick="next_question()" class="button-common" style="display: none;">Next Question</button>
-  </div>
-  <div id="moderator-panel">
-    <h2>Correct Answer</h2>
-    <div id="answer-display">
-      <button id="correct-answer-btn" class="button-common green-button" style="display:none" disabled></button>
+  <div id="moderator-quiz-container">
+    <div id="question-container" class="quiz-box">
+      <h1 id="question numbers"></h1>
+      <h2 id="question"></h2>
+      <div id="question-media"></div>
+      <br>
+      <button id="show-answer-btn" onclick="display_answer()" class="button-common">Show Answer</button>
+    </div>
+    <div id="correct-answer-panel" class="quiz-box">
+      <h2>Correct Answer</h2>
+      <div id="answer-display">
+        <button id="correct-answer-btn" class="button-common green-button" disabled></button>
+        <button id="next-question-btn" onclick="next_question()" class="button-common">Next Question</button>
+      </div>
+    </div>
+    <div id="results-panel" class="quiz-box">
+      <h1>Results</h1>
+      <div id="results-display">
+        <div id="result-answer-container-1">
+          <span id="result-answer-1"></span>
+          <span id="result-answer-1-count"></span>
+        </div>
+        <div id="result-answer-container-2">
+          <span id="result-answer-2"></span>
+          <span id="result-answer-2-count"></span>
+        </div>
+        <div id="result-answer-container-3">
+          <span id="result-answer-3"></span>
+          <span id="result-answer-3-count"></span>
+        </div>
+        <div id="result-answer-container-4">
+          <span id="result-answer-4"></span>
+          <span id="result-answer-4-count"></span>
+        </div>
+      </div>
     </div>
   </div>
 

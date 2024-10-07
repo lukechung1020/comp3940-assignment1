@@ -31,12 +31,27 @@ socket.onmessage = function (event) {
 
   let message = JSON.parse(event.data);
 
-  if (message.action == "PLAYER_JOINED") {
-    send_answers();
-  } else if(message.action == "MODERATOR_EXISTS") {
-    let tempArray = window.location.search.split("?");
-    baseURL = tempArray[0];
-    window.location.href = baseURL + "?category=" + categoryID + "&sessionID=" + Math.floor(Math.random() * 899999 + 100000);
+  switch(message.action) {
+    case "PLAYER_JOINED":
+      send_answers();
+      break;
+    case "ANSWER_SUBMISSION":
+      for(let i = 0; i < currentQuestionAnswers.length; i++) {
+        if(message.answer == currentQuestionAnswers[i]) {
+          answersResultsCounts[i] += 1;
+          var currentResultAnswerCount = document.getElementById("result-answer-" + (i+1) + "-count");
+          currentResultAnswerCount.innerHTML = answersResultsCounts[i];
+        }
+      }
+      break;
+    case "MODERATOR_EXISTS":
+      let tempArray = window.location.search.split("?");
+      baseURL = tempArray[0];
+      window.location.href = baseURL + "?category=" + categoryID + "&sessionID=" + Math.floor(Math.random() * 899999 + 100000);
+      break;
+    default:
+      console.log(message);
+      console.log("Unknown message action!");
   }
 };
 
@@ -68,8 +83,8 @@ window.addEventListener("unload", function () {
 
 let currentQuestionNumber = 0;
 let currentQuestionAnswers = [];
+let currentQuestionAnswer = "";
 var questionsJSON;
-var answers;
 
 function get_questions() {
   const xhttp = new XMLHttpRequest();
@@ -126,14 +141,15 @@ function updateQuestionFields(JSONObject) {
   question.innerText = currentQuestion.question;
 
   var correctAnswerButton = document.getElementById("correct-answer-btn");
-  correctAnswerButton.style.display = "none";
   correctAnswerButton.innerHTML = currentQuestionAnswer;
 
-  var showAnswerButton = document.getElementById("show-answer-btn");
-  showAnswerButton.style.display = "block";
+  var correctAnswerPanel = document.getElementById("correct-answer-panel");
+  correctAnswerPanel.style.display = "none";
 
-  var nextQuestionButton = document.getElementById("next-question-btn");
-  nextQuestionButton.style.display = "none";
+  var questionPanel = document.getElementById("question-container");
+  questionPanel.style.display = "block";
+
+  update_results_field(currentQuestionAnswers);
 }
 
 var imageTypes = ["apng", "png", "avif", "gif", "jpg", "jpeg", "jfif", "pjpeg", "pjp", "svg", "webp"];
@@ -170,7 +186,11 @@ function mediaParser(mediaPath) {
 
     var videoSource = document.createElement("source");
     videoSource.src = mediaPath;
-    videoSource.type = "video/" + mediaType;
+    if (mediaType === "mov") {
+      videoSource.type = "video/mp4";
+  } else {
+      videoSource.type = "video/" + mediaType;
+  }
 
     questionMedia.appendChild(videoElement);
     videoElement.appendChild(videoSource);
@@ -180,11 +200,36 @@ function mediaParser(mediaPath) {
   }
 }
 
-function display_answer() {
-  document.getElementById("correct-answer-btn").style.display = "block";
-  document.getElementById("next-question-btn").style.display = "block";
+let answersResultsCounts = [0, 0, 0, 0];
 
-  document.getElementById("show-answer-btn").style.display = "none";
+function update_results_field(answers) {
+  answersResultsCounts = [0, 0, 0, 0];
+  console.log(answers);
+  for(let i = 1; i <= 4; i++) {
+    console.log(i);
+    var currentResultContainer = document.getElementById("result-answer-container-" + i);
+    var currentResultAnswer = document.getElementById("result-answer-" + i);
+    var currentResultAnswerCount = document.getElementById("result-answer-" + i + "-count");
+    let currAnswer = answers[i - 1];
+
+    if(currAnswer == undefined) {
+      currentResultAnswer.innerHTML = "";
+      currentResultAnswerCount.innerHTML = "";
+      currentResultContainer.style.display = "none";
+    } else {
+      currentResultAnswer.innerHTML = currAnswer + ": ";
+      currentResultAnswerCount.innerHTML = answersResultsCounts[i - 1];
+      currentResultContainer.style.display = "block";
+    }
+  }
+}
+
+function display_answer() {
+  let nextQuestionBtn = document.getElementById("next-question-btn");
+  nextQuestionBtn.style.display = "block";
+
+  document.getElementById("correct-answer-panel").style.display = "block";
+  document.getElementById("question-container").style.display = "none";
 
   // Send the correct answers
   correctAnswerJSON = {
@@ -193,6 +238,10 @@ function display_answer() {
     "answer": currentQuestionAnswer
   }
   socket.send(JSON.stringify(correctAnswerJSON));
+
+  if(currentQuestionNumber == questionsJSON.questions.length) {
+    nextQuestionBtn.innerHTML = "End Quiz";
+  }
 }
 
 function next_question() {
