@@ -4,18 +4,17 @@
     </aspects>
     <weaver options="-verbose -showWeaveInfo -debug  -Xlint:ignore">
         <include within="PerformanceMonitorAspect"/>
+        <include within="CategoriesServlet"/>
+        <include within="CategoryServlet"/>
+        <include within="CheckLoginServlet"/>
         <include within="DbConnectionServlet"/>
-        <include within="DeleteCategoryServlet"/>
-        <include within="DeleteQuestionServlet"/>
         <include within="EditCategoryServlet"/>
         <include within="EditQuestionServlet"/>
         <include within="LoginServlet"/>
         <include within="LogoutServlet"/>
         <include within="MainServlet"/>
-        <include within="PlayServlet"/>
-        <include within="QuizServlet"/>
+        <include within="QuestionServlet"/>
+        <include within="QuestionsServlet"/>
         <include within="SignupServlet"/>
-        <include within="UploadCategoryServlet"/>
-        <include within="UploadQuestionServlet"/>
     </weaver>
 </aspectj>
