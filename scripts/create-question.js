@@ -2,17 +2,20 @@
 // Gets the categories from the database and populates the categories select form
 function get_categories() {
     const xhttp = new XMLHttpRequest();
-    xhttp.open("GET", "upload-question", true);
+    xhttp.open("GET", "categories", true);
 
     xhttp.onload = function () {
-        const obj = JSON.parse(this.responseText);
-        console.log(obj);
+        const categoriesJSON = JSON.parse(this.responseText);
+        if(categoriesJSON.status != "SUCCESS") {
+            window.location.href = "no-categories.html"
+        }
+
         var category_select = document.getElementById("category");
 
-        for (let i = 0; i < obj.categories.length; i++) {
+        for (let i = 0; i < categoriesJSON.categories.length; i++) {
             var opt = document.createElement("option");
-            opt.value = obj.categories[i].id;
-            opt.innerHTML = obj.categories[i].category;
+            opt.value = categoriesJSON.categories[i].id;
+            opt.innerHTML = categoriesJSON.categories[i].name;
             category_select.appendChild(opt);
         }
     }

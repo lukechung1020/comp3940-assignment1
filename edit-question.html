@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Edit Question</title>
+</head>
+
+<body>
+    <div id="navbar">
+        <button id="home-btn" onclick="window.location.href='main'">Home</button>
+        <button id="logout-button">Logout</button>
+    </div>
+    <br>
+    <h1>Edit Question</h1>
+    <br>
+    <h2>If you leave optional fields blank, it won't show up when playing the quiz.</h2>
+    <br>
+    <div id="edit-question-form">
+        <label for="select-question">Select Question: </label>
+        <select id="select-question" name="select-question" onchange="javascript:get_question(this.value)">
+            <option value="-1">---</option>
+        </select>
+        <div id="edit-question-container" style="display: none;">
+            <form action="edit-question" method="POST" id="edit-question" enctype="multipart/form-data">
+                <input type="hidden" id="question-id" name="question-id">
+                <label for="category">New Category: </label>
+                <select id="category" name="category" required></select>
+                <br>
+                <label for="question">New Question: </label>
+                <input type="text" id="question" name="question" maxlength="256" required>
+                <br>
+                <label for="correct-answer">New Correct Answer: </label>
+                <input type="text" id="correct-answer" name="correct-answer" maxlength="256" required>
+                <br>
+                <label for="wrong-answer-1">New Wrong Answer 1: </label>
+                <input type="text" id="wrong-answer1" name="wrong-answer1" maxlength="256" required>
+                <br>
+                <label for="wrong-answer-2">New Wrong Answer 2 (Optional): </label>
+                <input type="text" id="wrong-answer2" name="wrong-answer2" maxlength="256">
+                <br>
+                <label for="wrong-answer-3">New Wrong Answer 3 (Optional): </label>
+                <input type="text" id="wrong-answer3" name="wrong-answer3" maxlength="256">
+                <br>
+                <input type="hidden" id="current-image" name="current-image-path">
+                <div>Old Media: </div>
+                <div id="question-media">
+                </div>
+                <br>
+                <div>New Upload Media (Optional): </div>
+                <input type="file" id='question-file' name='filename'>
+                <br>
+                <br>
+                <button type="submit">Update Question</button>
+            </form>
+            <input type="hidden" id="delete-question-id" name="question-id">
+            <input type="hidden" id="delete-question-media" name="question-media">
+            <button onclick="delete_question()">Delete Question</button>
+        </div>
+    </div>
+</body>
+<script src="scripts/edit-question.js"></script>
+<script src="scripts/logout.js"></script>
+<script src="scripts/check-login.js"></script>
+
+</html>

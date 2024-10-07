@@ -13,8 +13,7 @@ CREATE TABLE categories (
     id INT NOT NULL AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL UNIQUE,
     date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    auto_play BOOLEAN DEFAULT FALSE,
-    image LONGBLOB,
+    content_path VARCHAR(255),
     PRIMARY KEY (id)
 );
 

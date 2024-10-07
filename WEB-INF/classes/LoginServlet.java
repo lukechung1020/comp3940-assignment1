@@ -1,10 +1,10 @@
 
 import jakarta.servlet.http.*;
 import jakarta.servlet.*;
-import java.sql.*;
+import java.util.List;
+import java.util.Map;
 import java.io.*;
 import org.mindrot.jbcrypt.BCrypt;
-import java.util.Properties;
 import org.json.*;
 
 public class LoginServlet extends DbConnectionServlet {
@@ -26,7 +26,6 @@ public class LoginServlet extends DbConnectionServlet {
       throws ServletException, IOException {
 
     response.setContentType("application/json");
-
     PrintWriter out = response.getWriter();
     StringBuilder sb = new StringBuilder();
     BufferedReader reader = request.getReader();
@@ -49,27 +48,24 @@ public class LoginServlet extends DbConnectionServlet {
       return;
     }
 
-    try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-        PreparedStatement ps = con.prepareStatement("SELECT password FROM users WHERE username = ?")) {
+    try {
+      List<Map<String, Object>> results = repository.select("SELECT password FROM users WHERE username = ?", username);
 
-      ps.setString(1, username);
-      try (ResultSet rs = ps.executeQuery()) {
-        if (rs.next()) {
-          String storedHashedPassword = rs.getString("password");
-          if (BCrypt.checkpw(password, storedHashedPassword)) {
-            HttpSession session = request.getSession(true);
-            session.setAttribute("username", username);
+      if (!results.isEmpty()) {
+        String storedHashedPassword = (String) results.get(0).get("password");
+        if (BCrypt.checkpw(password, storedHashedPassword)) {
+          HttpSession session = request.getSession(true);
+          session.setAttribute("username", username);
 
-            jsonResponse.put("success", true);
-            jsonResponse.put("message", "Login successful.");
-          } else {
-            jsonResponse.put("success", false);
-            jsonResponse.put("message", "Invalid username or password.");
-          }
+          jsonResponse.put("success", true);
+          jsonResponse.put("message", "Login successful.");
         } else {
           jsonResponse.put("success", false);
           jsonResponse.put("message", "Invalid username or password.");
         }
+      } else {
+        jsonResponse.put("success", false);
+        jsonResponse.put("message", "Invalid username or password.");
       }
     } catch (Exception ex) {
       ex.printStackTrace();

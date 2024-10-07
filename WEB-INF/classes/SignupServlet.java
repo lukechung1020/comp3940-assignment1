@@ -1,9 +1,9 @@
 import jakarta.servlet.http.*;
 import jakarta.servlet.*;
-import java.sql.*;
 import java.io.*;
+import java.util.List;
+import java.util.Map;
 import org.mindrot.jbcrypt.BCrypt;
-import java.util.Properties;
 import org.json.*;
 
 public class SignupServlet extends DbConnectionServlet {
@@ -51,19 +51,20 @@ public class SignupServlet extends DbConnectionServlet {
 
     String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
-    try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword)) {
-      PreparedStatement checkUserPs = con.prepareStatement("SELECT COUNT(*) FROM users WHERE username = ?");
-      checkUserPs.setString(1, username);
-      ResultSet rs = checkUserPs.executeQuery();
+    try {
+      List<Map<String, Object>> result = repository.select("SELECT COUNT(*) AS count FROM users WHERE username = ?",
+          username);
 
-      if (rs.next() && rs.getInt(1) > 0) {
+      long count = 0;
+      if (!result.isEmpty()) {
+        count = (long) result.get(0).get("count");
+      }
+
+      if (count > 0) {
         jsonResponse.put("success", false);
         jsonResponse.put("message", "Username already exists. Please choose a different username.");
       } else {
-        PreparedStatement ps = con.prepareStatement("INSERT INTO users (username, password) VALUES (?, ?)");
-        ps.setString(1, username);
-        ps.setString(2, hashedPassword);
-        int i = ps.executeUpdate();
+        int i = repository.insert("INSERT INTO users (username, password) VALUES (?, ?)", username, hashedPassword);
 
         if (i > 0) {
           HttpSession session = request.getSession(true);

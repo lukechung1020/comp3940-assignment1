@@ -1,183 +1,129 @@
-import jakarta.servlet.ServletException;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.MultipartConfig;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import jakarta.servlet.http.Part;
-
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import org.json.JSONObject;
 
-//maximum file size is 16MB right now
-@MultipartConfig(maxFileSize = 16177215)
+@MultipartConfig
 public class EditCategoryServlet extends DbConnectionServlet {
 
-    @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.setStatus(HttpServletResponse.SC_FOUND);
-            response.sendRedirect("login");
-            return;
-        }
+  @Override
+  protected void doPost(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
 
-        String username = (String) session.getAttribute("username");
-        String userType = null;
+    UUID uuid = UUID.randomUUID();
+    String uuidString = uuid.toString();
 
-        try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-             PreparedStatement ps = con
-                     .prepareStatement("SELECT user_type FROM users WHERE username = ?")) {
-            ps.setString(1, username);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    userType = rs.getString("user_type");
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        if (!"admin".equalsIgnoreCase(userType)) {
-            response.sendRedirect("main");
-            return;
-        }
-
-        response.setContentType("text/html");
-        PrintWriter out = response.getWriter();
-        StringBuilder categoryOptions = new StringBuilder();
-        String selectedCategoryId = request.getParameter("category-id");
-        String existingCategoryName = "";
-
-        // connect to the database and retrieve categories
-        try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-             PreparedStatement stmt = con.prepareStatement("SELECT id, name FROM categories")) {
-
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String name = rs.getString("name");
-                categoryOptions.append("<option value='").append(id).append("'")
-                        .append(selectedCategoryId != null && selectedCategoryId.equals(String.valueOf(id))
-                                ? " selected"
-                                : "")
-                        .append(">").append(name).append("</option>");
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            out.println("<p>Error loading categories.</p>");
-            return;
-        }
-
-        // fetch details of the selected category to prepopulate the form fields
-        if (selectedCategoryId != null && !selectedCategoryId.isEmpty()) {
-            try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-                 PreparedStatement ps = con.prepareStatement("SELECT name FROM categories WHERE id = ?")) {
-
-                ps.setInt(1, Integer.parseInt(selectedCategoryId));
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        existingCategoryName = rs.getString("name");
-                    }
-                }
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-                out.println("<p>Error loading selected category details.</p>");
-            }
-        }
-
-        // HTML form for editing a category
-        out.println("<!DOCTYPE html>"
-                + "<html><head><title>Edit Category</title></head>"
-                + "<body><h1>Edit Category</h1><br>"
-                + "<a href='main'>Back to Main Page</a><br><br>"
-                + "<form method='GET' action='edit-category'>"
-                + "<label for='category-id'>Select Category:</label>"
-                + "<select id='category-id' name='category-id' required onchange='this.form.submit()'>"
-                + "<option value=''>Select a category</option>"
-                + categoryOptions.toString()
-                + "</select><br>"
-                + "</form>");
-
-        // display the editing form only if a category is selected
-        if (selectedCategoryId != null && !selectedCategoryId.isEmpty()) {
-            out.println("<form method='POST' action='edit-category' enctype='multipart/form-data'>"
-                    + "<input type='hidden' name='category-id' value='" + selectedCategoryId + "'>"
-                    + "<label for='new-category-name'>New Category Name:</label>"
-                    + "<input type='text' id='new-category-name' name='new-category-name' value='"
-                    + existingCategoryName + "' required><br>"
-                    + "<label for='category-image'>Upload Image:</label>"
-                    + "<input type='file' id='category-image' name='category-image' accept='image/*' required><br>"
-                    + "<input type='submit' value='Update Category'><br><br><br>"
-                    + "</form>");
-
-            // separate form for deleting the category
-            out.println("<form method='POST' action='delete-category'>"
-                    + "<input type='hidden' name='category-id' value='" + selectedCategoryId + "'>"
-                    + "<input type='submit' value='Delete Category'>"
-                    + "</form>");
-        }
-
-        out.println("</body></html>");
+    Part newFilePart = request.getPart("filename");
+    String categoryID = request.getParameter("category-id");
+    String newCategoryName = request.getParameter("category");
+    String currentFilePath = request.getParameter("current-image-path");
+    String newFileName = "";
+    if(!newFilePart.getSubmittedFileName().trim().isEmpty()) {
+      newFileName = uuidString + newFilePart.getSubmittedFileName();
     }
+    String newFilePath = "";
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        // retrieve form data
-        String categoryId = request.getParameter("category-id");
-        String newCategoryName = request.getParameter("new-category-name");
+    try {
+      String updateQuery = "UPDATE categories SET name = ?";
+      List<Object> parameters = new ArrayList<>();
+      parameters.add(newCategoryName);
 
-        // validate inputs
-        if (categoryId == null || categoryId.isEmpty()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Category ID is required.");
-            return;
+      // If a new file is uploaded, set the file path in the query
+      if (!newFileName.trim().isEmpty()) {
+        updateQuery += ", content_path = ?";
+        parameters.add("media/" + newFileName);
+        newFilePath = System.getProperty("catalina.base") + "/webapps/comp3940-assignment1/media/" + newFileName;
+      }
+      updateQuery += " WHERE id = ?";
+      parameters.add(Integer.parseInt(categoryID));
+
+      int rowsUpdated = repository.update(updateQuery, parameters.toArray());
+
+      if (rowsUpdated > 0) {
+        response.sendRedirect("edit-success.html");
+
+        // Save the file in the server directory if a new file is provided
+        if (!newFileName.trim().isEmpty()) {
+          newFilePart.write(newFilePath);
+
+          // Delete the old file after uploading the new one
+          File oldFile = new File(
+              System.getProperty("catalina.base") + "/webapps/comp3940-assignment1/" + currentFilePath);
+          if (oldFile.exists()) {
+            oldFile.delete();
+          }
         }
+      } else {
+        response.sendRedirect("edit-failure.html");
+      }
 
-        // retrieve the image file part
-        Part filePart = request.getPart("category-image");
-        InputStream imageStream = null;
-
-        if (filePart != null && filePart.getSize() > 0) {
-            imageStream = filePart.getInputStream();
-        } else {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Image file is required.");
-            return;
-        }
-
-        // connect to the database to update the category
-        try (Connection con = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
-             PreparedStatement ps = con.prepareStatement(
-                     "UPDATE categories SET name = ?, image = ? WHERE id = ?")) {
-
-            // set parameters for the update query
-            ps.setString(1, newCategoryName); // Always update to new name
-            ps.setBlob(2, imageStream); // Update the image
-            ps.setInt(3, Integer.parseInt(categoryId));
-
-            // execute the update
-            int rowsUpdated = ps.executeUpdate();
-            if (rowsUpdated > 0) {
-                response.sendRedirect("edit-success.html");
-            } else {
-                response.sendRedirect("edit-failure.html");
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error updating category.");
-        } finally {
-            if (imageStream != null) {
-                imageStream.close();
-            }
-        }
+    } catch (Exception e) {
+      e.printStackTrace();
+      response.sendRedirect("edit-failure.html");
     }
+  }
+
+  @Override
+  protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
+
+    response.setContentType("application/json");
+    JSONObject responseJSON = new JSONObject();
+
+    String categoryID = request.getParameter("category-id");
+    String categoryMediaPath = request.getParameter("category-media");
+
+    try {
+      // Get list of question media for that category
+      // Delete the category from DB -> will delete related questions
+      // If this is successful, go through the question media and delete from server
+      // Finally delete category media
+
+      List<Map<String, Object>> questionResults = repository.select(
+          "SELECT content_path FROM questions WHERE category = ?",
+          Integer.parseInt(categoryID));
+
+      int rowsAffected = repository.delete("DELETE FROM categories WHERE id = ?", Integer.parseInt(categoryID));
+
+      if (rowsAffected == 0) {
+        // If no rows were affected, it means the deletion failed
+        responseJSON.put("status", "FAILED");
+        response.getWriter().println(responseJSON);
+        return;
+      }
+
+      // Delete question media
+      for (Map<String, Object> row : questionResults) {
+        String contentPath = (String) row.get("content_path");
+        if (contentPath != null && !contentPath.trim().isEmpty()) {
+          File media = new File(System.getProperty("catalina.base") + "/webapps/comp3940-assignment1/" + contentPath);
+          if (media.exists()) {
+            media.delete();
+          }
+        }
+      }
+
+      // Delete category media
+      File oldFile = new File(
+          System.getProperty("catalina.base") + "/webapps/comp3940-assignment1/" + categoryMediaPath);
+      if (oldFile.exists()) {
+        oldFile.delete();
+      }
+
+      responseJSON.put("status", "SUCCESS");
+      response.getWriter().println(responseJSON);
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      responseJSON.put("status", "FAILED");
+      responseJSON.put("message", "Error deleting category: " + e.getMessage());
+      response.getWriter().println(responseJSON);
+    }
+  }
 }
