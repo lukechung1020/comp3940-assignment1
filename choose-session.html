@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choose Session</title>
+  <link rel="stylesheet" type="text/css" href="styles/styles.css">
+</head>
+
+<body>
+  <div id="navbar">
+    <button id="home-btn" class="button-common" onclick="window.location.href='main'">Home</button>
+    <button id="logout-button" class="button-common red-button">Logout</button>
+  </div>
+  <h1>Choose Session</h1>
+  <br>
+  <div id="choose-session-form">
+    <form id="session-id-form" action="javascript:check_valid_session()">
+      <label for="session-id">Enter Session ID: </label>
+      <input id="session-id" type="number" maxlength="6" placeholder="Enter 6 digits" required>
+      <button type="submit" class="button-common green-button">Connect</button>
+    </form>
+  </div>
+</body>
+<script src="scripts/choose-session.js"></script>
+<script src="scripts/logout.js"></script>
+<script src="scripts/check-login.js"></script>
+
+</html>

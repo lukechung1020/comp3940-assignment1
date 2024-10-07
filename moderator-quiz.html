@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Play Quiz</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+
+<body>
+  <h2 id="current-session-id">Session ID: </h2>
+  <div id="question-container" class="quiz-box">
+    <h1 id="question numbers"></h1>
+    <h2 id="question"></h2>
+    <div id="question-media"></div>
+    <br>
+    <button id="show-answer-btn" onclick="display_answer()" class="button-common">Show Answer</button>
+    <button id="next-question-btn" class="button-common" style="display: none;">Next Question</button>
+  </div>
+  <div id="moderator-panel">
+    <h1>Correct Answer</h1>
+    <div id="answer-display">
+      <button id="correct-answer-btn" class="button-common green-button" style="display:none" disabled></button>
+    </div>
+  </div>
+
+  <script src="scripts/moderator-quiz.js"></script>
+</body>
+
+</html>

@@ -108,4 +108,24 @@
     <url-pattern>/check-login</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+    <servlet-name>QuizWebSocket</servlet-name>
+    <servlet-class>QuizWebSocketServlet</servlet-class>
+  </servlet>
+  
+  <servlet-mapping>
+    <servlet-name>QuizWebSocket</servlet-name>
+    <url-pattern>/multi-quiz</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>WebSocketSession</servlet-name>
+    <servlet-class>WebSocketSessionServlet</servlet-class>
+  </servlet>
+  
+  <servlet-mapping>
+    <servlet-name>WebSocketSession</servlet-name>
+    <url-pattern>/check-session</url-pattern>
+  </servlet-mapping>
+
 </web-app>

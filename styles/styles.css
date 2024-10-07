@@ -42,7 +42,8 @@ p {
 #create-category-form,
 #create-question-form,
 #edit-category-form,
-#edit-question-form{
+#edit-question-form,
+#choose-question-form {
   width: 100%;
   max-width: 500px;
   margin: 1rem auto;
@@ -108,5 +109,17 @@ input {
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   text-align: center;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
 }
 
