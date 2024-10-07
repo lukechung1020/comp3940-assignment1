@@ -1,29 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create A Category</title>
     <link rel="stylesheet" type="text/css" href="styles/styles.css">
 </head>
+
 <body>
-<div id="navbar">
-    <button id="home-btn" class="button-common" onclick="window.location.href='main'">Home</button>
-    <button id="logout-button" class="button-common red-button">Logout</button>
-</div>
-<br>
-<h1>Create A New Category</h1>
-<br>
-<div id="create-category-form">
-    <form method="POST" action="category" enctype="multipart/form-data" id="create-category">
-        <label for="category-name">Category Name:</label>
-        <input type="text" id="category-name" name="category-name" required><br><br>
-        <label for="category-image">Upload Image:</label>
-        <input type="file" id="category-image" name="filename" accept="image/*" required><br><br>
-        <button type="submit" class="button-common green-button">Submit</button>
-    </form>
-</div>
-<script src="scripts/logout.js"></script>
-<script src="scripts/check-login.js"></script>
+    <div id="navbar">
+        <button id="home-btn" class="button-common" onclick="window.location.href='main'">HOME</button>
+        <button id="logout-button" class="button-common">LOGOUT</button>
+    </div>
+    <br>
+    <h1>Create A New Category</h1>
+    <br>
+    <div id="create-category-form">
+        <form method="POST" action="category" enctype="multipart/form-data" id="create-category">
+            <label for="category-name">Category Name:</label>
+            <input type="text" id="category-name" name="category-name" required><br><br>
+            <label for="category-image">Upload Image:</label>
+            <input type="file" id="category-image" name="filename" accept="image/*" required><br><br>
+            <button type="submit" class="button-common green-button">Submit</button>
+        </form>
+    </div>
+    <script src="scripts/logout.js"></script>
+    <script src="scripts/check-login.js"></script>
 </body>
+
 </html>

@@ -60,7 +60,7 @@ public class QuizWebSocket {
                 handlePlayerJoin(session);
                 break;
             default:
-                broadcast(message, session.getId());
+                broadcast(message, currentSessionId);
         }
     }
 
@@ -98,25 +98,30 @@ public class QuizWebSocket {
         if (sessionModerators.containsKey(currentSessionId)) {
             // If a moderator is already present, send an error and close the session.
             messageJSON.put("message", "Session already has a moderator. Connection closed.");
+            messageJSON.put("action", "MODERATOR_EXISTS");
             sendMessage(session, messageJSON.toString());
-            closeSession(session, "Moderator already present in this session.");
         } else {
             // Register the session as a moderator and store the session information.
             sessionType.put(session, "MODERATOR");
             sessionIds.put(session, currentSessionId);
             sessionModerators.put(currentSessionId, session);
             messageJSON.put("message", "You have joined as the moderator.");
-            sendMessage(session, messageJSON.toString());
+            messageJSON.put("action", "MODERATOR_JOINED");
+            broadcast(messageJSON.toString(), currentSessionId);
             System.out.println("Moderator joined for session: " + currentSessionId);
         }
     }
 
     // Handle when a client wants to join as a player.
     private void handlePlayerJoin(Session session) {
+        JSONObject messageJSON = new JSONObject();
+
         // Allow players to join without restriction.
         sessionType.put(session, "PLAYER");
         sessionIds.put(session, currentSessionId);
-        sendMessage(session, "PLAYER_JOINED:You have joined as a player.");
+        messageJSON.put("message", "You have joined as a player.");
+        messageJSON.put("action", "PLAYER_JOINED");
+        broadcast(messageJSON.toString(), currentSessionId);
         System.out.println("Player joined for session: " + currentSessionId);
     }
 

@@ -12,7 +12,7 @@ const clientRole = "MODERATOR";
 // Event: When WebSocket connection is established.
 const socket = new WebSocket("ws://localhost:8081/comp3940-assignment1/multi-quiz/" + sessionID);
 
-socket.onopen = async function (event) {
+socket.onopen = function (event) {
   console.log("Connected to the WebSocket server.");
 
   var message = {
@@ -29,7 +29,15 @@ socket.onopen = async function (event) {
 socket.onmessage = function (event) {
   console.log("Message from server:", event.data);
 
-  let message = event.data;
+  let message = JSON.parse(event.data);
+
+  if (message.action == "PLAYER_JOINED") {
+    send_answers();
+  } else if(message.action == "MODERATOR_EXISTS") {
+    let tempArray = window.location.search.split("?");
+    baseURL = tempArray[0];
+    window.location.href = baseURL + "?category=" + categoryID + "&sessionID=" + Math.floor(Math.random() * 899999 + 100000);
+  }
 };
 
 // Event: When the WebSocket connection is closed.
@@ -42,21 +50,26 @@ socket.onerror = function (error) {
   console.error("WebSocket error:", error);
 };
 
+window.addEventListener("unload", function () {
+  if (socket.readyState == WebSocket.OPEN) {
+      modDCJSON = {
+        "role": clientRole,
+        "action": "MODERATOR_DISCONNECTED"
+      }
+      socket.send(JSON.stringify(modDCJSON));
+      socket.close();
+    }
+});
+
+
 
 // QUIZ RELATED LOGIC
 // -----------------------------------------------------------------------
 
-let correctAnswerShown = false;
 let currentQuestionNumber = 0;
 let currentQuestionAnswers = [];
 var questionsJSON;
 var answers;
-
-var testJSON = {
-  "role": clientRole,
-  "action": "none"
-}
-var testMSG = JSON.stringify(testJSON);
 
 function get_questions() {
   const xhttp = new XMLHttpRequest();
@@ -112,9 +125,12 @@ function updateQuestionFields(JSONObject) {
   var question = document.getElementById("question");
   question.innerText = currentQuestion.question;
 
-  var answerButton = document.getElementById("correct-answer-btn");
-  answerButton.style.display = "none";
-  answerButton.innerHTML = currentQuestionAnswer;
+  var correctAnswerButton = document.getElementById("correct-answer-btn");
+  correctAnswerButton.style.display = "none";
+  correctAnswerButton.innerHTML = currentQuestionAnswer;
+
+  var showAnswerButton = document.getElementById("show-answer-btn");
+  showAnswerButton.style.display = "block";
 
   var nextQuestionButton = document.getElementById("next-question-btn");
   nextQuestionButton.style.display = "none";
@@ -169,6 +185,24 @@ function display_answer() {
   document.getElementById("next-question-btn").style.display = "block";
 
   document.getElementById("show-answer-btn").style.display = "none";
+
+  // Send the correct answers
+  correctAnswerJSON = {
+    "role": clientRole,
+    "action": "CORRECT_ANSWER",
+    "answer": currentQuestionAnswer
+  }
+  socket.send(JSON.stringify(correctAnswerJSON));
+}
+
+function next_question() {
+  if (currentQuestionNumber == questionsJSON.questions.length) {
+    window.location.href = "end-of-quiz.html";
+  } else {
+    mediaParser(questionsJSON.questions[currentQuestionNumber].content_path);
+    updateQuestionFields(questionsJSON);
+    send_answers();
+  }
 }
 
 // Shuffles the array

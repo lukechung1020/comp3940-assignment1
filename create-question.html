@@ -1,47 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create A Question</title>
     <link rel="stylesheet" href="styles/styles.css">
 </head>
+
 <body>
-<div id="navbar">
-    <button id="home-btn" class="button-common" onclick="window.location.href='main'">Home</button>
-    <button id="logout-button" class="button-common red-button">Logout</button>
-</div>
-<br>
-<h1>Create A New Question</h1>
-<br>
-<div id="create-question-form">
-    <form action="question" method="POST" id="create-question" enctype="multipart/form-data">
-        <label for="category">Category: </label>
-        <select id="category" name="category" required></select>
-        <br>
-        <label for="question">Question: </label>
-        <input type="text" id="question" name="question" maxlength="256" required>
-        <br>
-        <label for="correct-answer">Correct Answer: </label>
-        <input type="text" id="correct-answer" name="correct-answer" maxlength="256" required>
-        <br>
-        <label for="wrong-answer-1">Wrong Answer 1: </label>
-        <input type="text" id="wrong-answer1" name="wrong-answer1" maxlength="256" required>
-        <br>
-        <label for="wrong-answer-2">Wrong Answer 2 (Optional): </label>
-        <input type="text" id="wrong-answer2" name="wrong-answer2" maxlength="256">
-        <br>
-        <label for="wrong-answer-3">Wrong Answer 3 (Optional): </label>
-        <input type="text" id="wrong-answer3" name="wrong-answer3" maxlength="256">
-        <br>
-        <label for="question-file">Upload Media (Optional): </label>
-        <input type="file" id="question-file" name="filename">
-        <br>
-        <button type="submit" class="button-common green-button">Submit</button>
-    </form>
-</div>
-<script src="scripts/create-question.js"></script>
-<script src="scripts/logout.js"></script>
-<script src="scripts/check-login.js"></script>
+    <div id="navbar">
+        <button id="home-btn" class="button-common" onclick="window.location.href='main'">HOME</button>
+        <button id="logout-button" class="button-common">LOGOUT</button>
+    </div>
+    <br>
+    <h1>Create A New Question</h1>
+    <br>
+    <div id="create-question-form">
+        <form action="question" method="POST" id="create-question" enctype="multipart/form-data">
+            <label for="category">Category: </label>
+            <select id="category" name="category" required></select>
+            <br>
+            <label for="question">Question: </label>
+            <input type="text" id="question" name="question" maxlength="256" required>
+            <br>
+            <label for="correct-answer">Correct Answer: </label>
+            <input type="text" id="correct-answer" name="correct-answer" maxlength="256" required>
+            <br>
+            <label for="wrong-answer-1">Wrong Answer 1: </label>
+            <input type="text" id="wrong-answer1" name="wrong-answer1" maxlength="256" required>
+            <br>
+            <label for="wrong-answer-2">Wrong Answer 2 (Optional): </label>
+            <input type="text" id="wrong-answer2" name="wrong-answer2" maxlength="256">
+            <br>
+            <label for="wrong-answer-3">Wrong Answer 3 (Optional): </label>
+            <input type="text" id="wrong-answer3" name="wrong-answer3" maxlength="256">
+            <br>
+            <label for="question-file">Upload Media (Optional): </label>
+            <input type="file" id="question-file" name="filename">
+            <br>
+            <button type="submit" class="button-common green-button">Submit</button>
+        </form>
+    </div>
+    <script src="scripts/create-question.js"></script>
+    <script src="scripts/logout.js"></script>
+    <script src="scripts/check-login.js"></script>
 </body>
+
 </html>

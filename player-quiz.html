@@ -1,25 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Player Quiz</title>
   <link rel="stylesheet" href="styles/styles.css">
 </head>
+
 <body>
+  <div id="navbar">
+    <button id="home-btn" class="button-common" onclick="window.location.href='main'">HOME</button>
+  </div>
   <h2 id="current-session-id">Session ID: </h2>
   <div id="player-panel">
-    <div id="question-container" class="quiz-box">
+    <div id="answer-container" class="quiz-box">
       <h2>Choose the correct answer!</h2>
-      <button id="button1" class="button-common"></button>
-      <button id="button2" class="button-common"></button>
-      <button id="button3" class="button-common"></button>
-      <button id="button4" class="button-common"></button>      
+      <button id="button1" class="button-common" onclick="submit_answer(this.value)"></button>
+      <button id="button2" class="button-common" onclick="submit_answer(this.value)"></button>
+      <button id="button3" class="button-common" onclick="submit_answer(this.value)"></button>
+      <button id="button4" class="button-common" onclick="submit_answer(this.value)"></button>
     </div>
     <form>
     </form>
   </div>
+  <div id="selected-answer-container" class="quiz-box" style="display: none;">
+    <h1 id="answer-message"></h1>
+    <h2>Selected Answer:</h2>
+    <button id="selected-answer-btn" class="button-common" disabled></button>
+  </div>
 
   <script src="scripts/player-quiz.js"></script>
+  <script src="scripts/check-login.js"></script>
 </body>
+
 </html>
